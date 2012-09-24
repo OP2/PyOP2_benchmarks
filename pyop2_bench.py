@@ -62,31 +62,25 @@ class PyOP2Benchmark(Benchmark):
             for this, base in zip(self.plotdata[v], self.plotdata['fluidity']):
                 self.plotdata[v+'_speedup'].append(base/this)
 
+    def _plot(self, fig, plot, col, legend_pos, ylabel, title, show=False):
+        f = pylab.figure(fig, figsize=(8, 6), dpi=300)
+        for v in self.version:
+            plot(self.plotdata['elements'], self.plotdata[col(v)], label=v)
+        pylab.legend(loc=legend_pos)
+        pylab.xlabel('Number of elements in the mesh')
+        pylab.ylabel(ylabel)
+        pylab.title(title)
+        pylab.grid(True)
+        pylab.savefig('%s.svg' % fig, orientation='landscape', format='svg', transparent=True)
+        if show:
+            pylab.show()
+        pylab.close(f)
+
     def plot_result(self):
+        title = 'Benchmark of an advection-diffusion problem for 100 time steps'
         for fig, pl in zip(('linear', 'semilogx'), (pylab.plot, pylab.semilogx)):
-            f = pylab.figure(fig, figsize=(8, 6), dpi=300)
-            for v in self.version:
-                pl(self.plotdata['elements'], self.plotdata[v], label=v)
-            pylab.legend(loc='upper left')
-            pylab.xlabel('Number of elements in the mesh')
-            pylab.ylabel('Overall runtime in seconds')
-            pylab.title('Benchmark of an advection-diffusion problem for 100 time steps')
-            pylab.grid(True)
-            pylab.savefig('runtime_%s.svg' % fig, orientation='landscape', format='svg', transparent=True)
-            #pylab.show()
-            pylab.close(f)
-        for fig, pl in zip(('linear', 'semilogx'), (pylab.plot, pylab.semilogx)):
-            f = pylab.figure(fig, figsize=(8, 6), dpi=300)
-            for v in self.version:
-                pl(self.plotdata['elements'], self.plotdata[v+'_speedup'], label=v)
-            pylab.legend(loc='lower right')
-            pylab.xlabel('Number of elements in the mesh')
-            pylab.ylabel('Relative speedup over Fluidity baseline')
-            pylab.title('Benchmark of an advection-diffusion problem for 100 time steps')
-            pylab.grid(True)
-            pylab.savefig('speedup_%s.svg' % fig, orientation='landscape', format='svg', transparent=True)
-            #pylab.show()
-            pylab.close(f)
+            self._plot('runtime_'+fig, pl, lambda x: x, 'upper left', 'Overall runtime in seconds', title)
+            self._plot('speedup_'+fig, pl, lambda x: x+'_speedup', 'lower right', 'Relative speedup over Fluidity baseline', title)
 
 if __name__ == '__main__':
     b = PyOP2Benchmark()

@@ -3,6 +3,7 @@
 import os
 import csv
 from collections import defaultdict
+from datetime import datetime
 import pylab
 
 from benchrun import Benchmark, clock
@@ -34,6 +35,7 @@ class PyOP2Benchmark(Benchmark):
     def __init__(self):
         Benchmark.__init__(self)
         self.plotdata = defaultdict(list)
+        self.timestamp = datetime.today().isoformat().replace(':', '')
         for s in self.meshsize:
             mesh = 'mesh_%d' % s
             generate_meshfile(mesh, s)
@@ -52,8 +54,13 @@ class PyOP2Benchmark(Benchmark):
         self.plotdata[version].append(t)
         return t
 
+    def _path(self, filename):
+        if not os.path.exists(self.timestamp):
+            os.makedirs(self.timestamp)
+        return os.path.join(self.timestamp, filename)
+
     def write_csv(self):
-        with open('results.csv', 'wb') as f:
+        with open(self._path('results.csv'), 'wb') as f:
             w = csv.writer(f)
             w.writerows(self.results)
 
@@ -71,7 +78,7 @@ class PyOP2Benchmark(Benchmark):
         pylab.ylabel(ylabel)
         pylab.title(title)
         pylab.grid(True)
-        pylab.savefig('%s.svg' % fig, orientation='landscape', format='svg', transparent=True)
+        pylab.savefig(self._path('%s.svg' % fig), orientation='landscape', format='svg', transparent=True)
         if show:
             pylab.show()
         pylab.close(f)

@@ -40,7 +40,7 @@ class PyOP2Benchmark(Benchmark):
             mesh = 'mesh_%d' % s
             generate_meshfile(mesh, s)
             for flml in ['advection_diffusion', 'ufl_advection_diffusion']:
-                with open('%s.flml'%flml) as f1, open('%s.%d.flml'%(flml,s), 'w') as f2:
+                with open('%s.flml.template'%flml) as f1, open('%s.%d.flml'%(flml,s), 'w') as f2:
                     f2.write(f1.read() % {'mesh': mesh})
 
     def run(self, version, meshsize):

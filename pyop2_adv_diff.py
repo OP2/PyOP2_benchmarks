@@ -123,7 +123,7 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
                          tracer(elem_node, op2.READ),
                          velocity(elem_node, op2.READ))
 
-            op2.solve(mat, b, tracer)
+            op2.solve(mat, tracer, b)
 
         # Diffusion
 
@@ -142,7 +142,7 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
                          coords(elem_node, op2.READ),
                          tracer(elem_node, op2.READ))
 
-            op2.solve(mat, b, tracer)
+            op2.solve(mat, tracer, b)
 
 
         current_time += dt
@@ -151,8 +151,6 @@ if __name__ == '__main__':
     from parameters import *
     parser = utils.parser(group=True, description="PyOP2 P1 advection-diffusion demo")
     parser.add_argument('-m', '--mesh',
-                        action='store',
-                        type=str,
                         help='Base name of triangle mesh (excluding the .ele or .node extension)')
     opt = vars(parser.parse_args())
     run(diffusivity, current_time, dt, endtime, **opt)

@@ -15,6 +15,8 @@ class InitialCondition(Expression):
 
 def simulation(D, A, t, dt, endtime, mesh, initial):
 
+    set_log_level(ERROR)
+
     # Added due to mesh not conforming to UFC numbering, allegedly
     mesh.order()
 

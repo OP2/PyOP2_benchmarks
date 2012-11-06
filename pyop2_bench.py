@@ -2,6 +2,7 @@
 
 import os
 import csv
+import pickle
 from collections import defaultdict
 from datetime import datetime
 import pylab
@@ -36,9 +37,13 @@ class PyOP2Benchmark(Benchmark):
         Benchmark.__init__(self)
         self.plotdata = defaultdict(list)
         self.timestamp = datetime.today().isoformat().replace(':', '')
+
+    def create_input(self):
         for s in self.meshsize:
             mesh = 'mesh_%d' % s
+            # Generate triangle mesh
             generate_meshfile(mesh, s)
+            # Generate flml
             for flml in ['advection_diffusion', 'ufl_advection_diffusion']:
                 with open('%s.flml.template'%flml) as f1, open('%s.%d.flml'%(flml,s), 'w') as f2:
                     f2.write(f1.read() % {'mesh': mesh})
@@ -63,6 +68,14 @@ class PyOP2Benchmark(Benchmark):
         with open(self._path('results.csv'), 'wb') as f:
             w = csv.writer(f)
             w.writerows(self.results)
+
+    def dump(self):
+        with open(self._path('results.pickle'), 'wb') as f:
+            pickle.dump(self.__dict__, f)
+
+    def load(self, filename):
+        with open(filename, 'rb') as f:
+            self.__dict__.update(pickle.load(f))
 
     def compute_speedup(self):
         for v in self.version:
@@ -90,8 +103,26 @@ class PyOP2Benchmark(Benchmark):
             self._plot('speedup_'+fig, pl, lambda x: x+'_speedup', 'lower right', 'Relative speedup over Fluidity baseline', title)
 
 if __name__ == '__main__':
+
+    import argparse
+    parser = argparse.ArgumentParser(description=PyOP2Benchmark.__doc__)
+    parser.add_argument('-r', '--run', action='store_true', help='run benchmarks')
+    parser.add_argument('-p', '--plot', action='store_true', help='plot results')
+    parser.add_argument('-d', '--dump', action='store_true', help='Pickle dump')
+    parser.add_argument('-c', '--csv', action='store_true', help='Dump to CSV')
+    parser.add_argument('-l', '--load', help='Pickle load from file')
+    args = parser.parse_args()
+
     b = PyOP2Benchmark()
-    b.print_result()
-    b.compute_speedup()
-    b.write_csv()
-    b.plot_result()
+    if args.load and os.path.exists(args.load):
+        b.load(args.load)
+    if args.run:
+        b.create_input()
+        b.print_result()
+        b.compute_speedup()
+    if args.dump:
+        b.dump()
+    if args.csv:
+        b.write_csv()
+    if args.plot:
+        b.plot_result()

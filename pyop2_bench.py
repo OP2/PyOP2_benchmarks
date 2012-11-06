@@ -9,6 +9,7 @@ import pylab
 
 from benchrun import Benchmark, clock
 from generate_mesh import generate_meshfile
+import parameters
 
 def dolfin(meshsize):
     os.system("python dolfin_adv_diff.py %d" % meshsize)
@@ -46,7 +47,13 @@ class PyOP2Benchmark(Benchmark):
             # Generate flml
             for flml in ['advection_diffusion', 'ufl_advection_diffusion']:
                 with open('%s.flml.template'%flml) as f1, open('%s.%d.flml'%(flml,s), 'w') as f2:
-                    f2.write(f1.read() % {'mesh': mesh})
+                    f2.write(f1.read() % {
+                        'mesh': mesh,
+                        'diffusivity': parameters.diffusivity,
+                        'current_time': parameters.current_time,
+                        'dt': parameters.dt,
+                        'endtime': parameters.endtime - parameters.dt
+                        })
 
     def run(self, version, meshsize):
         print "Running %s with mesh size %dx%d" % (version, meshsize, meshsize)

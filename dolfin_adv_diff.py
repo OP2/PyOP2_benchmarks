@@ -2,7 +2,6 @@ import sys
 
 from dolfin import *
 from analytical_solution import advection_diffusion as val
-from parameters import *
 
 parameters["form_compiler"]["cpp_optimize"] = True
 
@@ -13,7 +12,7 @@ class InitialCondition(Expression):
     def eval(self, values, x):
         values[0] = self._fn(x, 0.1)
 
-def simulation(D, A, t, dt, endtime, mesh, initial):
+def simulation(D, t, dt, endtime, mesh, initial):
 
     set_log_level(ERROR)
 
@@ -69,10 +68,11 @@ def simulation(D, A, t, dt, endtime, mesh, initial):
         t += dt
 
 def run(meshsize):
+    from parameters import diffusivity, current_time, dt, endtime
     mesh = UnitSquare(meshsize, meshsize)
     mesh.init()
 
-    simulation(D, A, t, dt, endtime, mesh, val)
+    simulation(diffusivity, current_time, dt, endtime, mesh, val)
 
 if __name__ == '__main__':
     run(int(sys.argv[1]))

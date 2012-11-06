@@ -1,26 +1,24 @@
 """
-This demo solves the identity equation on a domain read in from a triangle
-file. It requires the fluidity-pyop2 branch of ffc, which can be obtained
+This demo solves an advection-diffusion equation on a domain read in from a
+triangle file. It requires the pyop2 branch of ffc, which can be obtained
 with:
 
-bzr branch lp:~grm08/ffc/fluidity-pyop2
+bzr branch lp:~mapdes/ffc/pyop2
 
 This may also depend on development trunk versions of other FEniCS programs.
 """
+
+import numpy as np
 
 from pyop2 import op2, utils
 from pyop2.ffc_interface import compile_form
 from triangle_reader import read_triangle
 from ufl import *
 
-import numpy as np
-
-def run(**kwargs):
+def run(diffusivity, current_time, dt, endtime, **kwargs):
     op2.init(**kwargs)
 
     # Set up finite element problem
-
-    dt = 0.0001
 
     T = FiniteElement("Lagrange", "triangle", 1)
     V = VectorElement("Lagrange", "triangle", 1)
@@ -102,12 +100,10 @@ def run(**kwargs):
 
     # Assemble and solve
 
-    T = 0.01
-
     have_advection = True
     have_diffusion = True
 
-    while T < 0.02:
+    while current_time < endtime:
 
         # Advection
 
@@ -149,13 +145,14 @@ def run(**kwargs):
             op2.solve(mat, b, tracer)
 
 
-        T = T + dt
+        current_time += dt
 
 if __name__ == '__main__':
+    from parameters import *
     parser = utils.parser(group=True, description="PyOP2 P1 advection-diffusion demo")
     parser.add_argument('-m', '--mesh',
                         action='store',
                         type=str,
                         help='Base name of triangle mesh (excluding the .ele or .node extension)')
     opt = vars(parser.parse_args())
-    run(**opt)
+    run(diffusivity, current_time, dt, endtime, **opt)

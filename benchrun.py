@@ -26,7 +26,7 @@ def combinations(*seqin):
     return rloop(seqin,[])
 
 
-class Benchmark:
+class Benchmark(object):
     sort_by = []
     reference = None
 

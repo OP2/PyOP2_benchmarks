@@ -43,15 +43,10 @@ def run(**kwargs):
 
     # Generate code for mass and rhs assembly.
 
-    mass_code        = compile_form(M,           "mass")
-    adv_rhs_code     = compile_form(adv_rhs,     "adv_rhs")
-    diff_matrix_code = compile_form(diff_matrix, "diff_matrix")
-    diff_rhs_code    = compile_form(diff_rhs,    "diff_rhs")
-
-    mass        = op2.Kernel(mass_code,        "mass_cell_integral_0_0")
-    adv_rhs     = op2.Kernel(adv_rhs_code,     "adv_rhs_cell_integral_0_0" )
-    diff_matrix = op2.Kernel(diff_matrix_code, "diff_matrix_cell_integral_0_0")
-    diff_rhs    = op2.Kernel(diff_rhs_code,    "diff_rhs_cell_integral_0_0")
+    mass        = compile_form(M,           "mass")[0]
+    adv_rhs     = compile_form(adv_rhs,     "adv_rhs")[0]
+    diff_matrix = compile_form(diff_matrix, "diff_matrix")[0]
+    diff_rhs    = compile_form(diff_rhs,    "diff_rhs")[0]
 
     # Set up simulation data structures
 

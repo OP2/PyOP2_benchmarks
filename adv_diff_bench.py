@@ -109,6 +109,8 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--csv', action='store_true', help='Dump to CSV')
     parser.add_argument('-l', '--load', help='Pickle load from file')
     parser.add_argument('-q', '--quiet', help='Only print errors and warnings')
+    parser.add_argument('-s', '--skip-create-input', action='store_true',
+            help='Do not generate input files')
     parser.add_argument('-n', '-np', type=int, default=1,
             help='Number of MPI process (Fluidity, DOLFIN)')
     parser.add_argument('-b', '--backend', default='sequential',
@@ -120,7 +122,8 @@ if __name__ == '__main__':
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.run:
-        b.create_input()
+        if not args.skip_create_input:
+            b.create_input()
         b.time_all()
         b.sort_results()
         b.print_result()

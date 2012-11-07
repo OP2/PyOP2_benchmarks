@@ -34,7 +34,7 @@ if argv[0][-4:]!=".msh":
     sys.exit(1)
     
 
-basename=os.path.basename(argv[0][:-4])
+basename=argv[0][:-4]
 
 mshfile=file(argv[0], 'r')
 

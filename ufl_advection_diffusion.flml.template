@@ -68,7 +68,9 @@
     return (1.0, 0.0)</string_value>
           </python>
         </value>
-        <output/>
+        <output>
+          <exclude_from_vtu/>
+        </output>
         <stat>
           <exclude_from_stat/>
         </stat>
@@ -137,13 +139,17 @@ solve(D == diff_rhs, t)</string_value>
             <string_value lines="20" type="code" language="python">from analytical_solution import advection_diffusion as val</string_value>
           </python>
         </initial_condition>
-        <output/>
-        <stat/>
+        <output>
+          <exclude_from_vtu/>
+        </output>
+        <stat>
+          <exclude_from_stat/>
+        </stat>
         <convergence>
-          <include_in_convergence/>
+          <exclude_from_convergence/>
         </convergence>
         <detectors>
-          <include_in_detectors/>
+          <exclude_from_detectors/>
         </detectors>
         <steady_state>
           <include_in_steady_state/>

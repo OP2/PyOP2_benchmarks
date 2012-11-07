@@ -1,9 +1,11 @@
+import logging
 import os
 import csv
 import pickle
 from collections import defaultdict
 from datetime import datetime
 import pylab
+import subprocess
 
 from benchrun import Benchmark
 
@@ -14,6 +16,12 @@ class PyOP2Benchmark(Benchmark):
         super(PyOP2Benchmark, self).__init__()
         self.plotdata = defaultdict(list)
         self.timestamp = datetime.today().isoformat().replace(':', '')
+        logging.basicConfig(format='%(message)s')
+
+    def time_all(self):
+        self.log('=== Start Benchmark run at %s ===\n' % datetime.today())
+        super(PyOP2Benchmark, self).time_all()
+        self.log('=== Finish Benchmark run at %s ===\n' % datetime.today())
 
     def _path(self, filename):
         if not os.path.exists(self.timestamp):
@@ -24,6 +32,14 @@ class PyOP2Benchmark(Benchmark):
         with open(self._path('results.csv'), 'wb') as f:
             w = csv.writer(f)
             w.writerows(self.results)
+
+    def log(self, msg=''):
+        with open(self._path('benchmark.log'), 'a') as f:
+            f.write(msg+'\n')
+        logging.info(msg)
+
+    def logged_call(self, call):
+        self.log(subprocess.check_output(call, stderr=subprocess.STDOUT, shell=True))
 
     def dump(self):
         with open(self._path('results.pickle'), 'wb') as f:

@@ -1,3 +1,4 @@
+import logging
 import os
 import pylab
 
@@ -18,22 +19,22 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     reference = ('version', 'fluidity')
 
     def dolfin(self, meshsize):
-        os.system("python dolfin_adv_diff.py %d" % meshsize)
+        self.logged_call("python dolfin_adv_diff.py %d" % meshsize)
 
     def fluidity(self, meshsize):
-        os.system('${FLUIDITY_DIR}/bin/fluidity advection_diffusion.%d.flml' % meshsize)
+        self.logged_call('${FLUIDITY_DIR}/bin/fluidity advection_diffusion.%d.flml' % meshsize)
 
     def fluidity_pyop2(self, meshsize):
-        os.system('${FLUIDITY_DIR}/bin/fluidity ufl_advection_diffusion.%d.flml' % meshsize)
+        self.logged_call('${FLUIDITY_DIR}/bin/fluidity ufl_advection_diffusion.%d.flml' % meshsize)
 
     def pyop2(self, meshsize):
-        os.system('python pyop2_adv_diff.py -m mesh_%d' % meshsize)
+        self.logged_call('python pyop2_adv_diff.py -m mesh_%d' % meshsize)
 
     def create_input(self):
         for s in self.meshsize:
             mesh = 'mesh_%d' % s
             # Generate triangle mesh
-            generate_meshfile(mesh, s)
+            self.log(generate_meshfile(mesh, s, capture=True))
             # Generate flml
             for flml in ['advection_diffusion', 'ufl_advection_diffusion']:
                 with open('%s.flml.template'%flml) as f1, open('%s.%d.flml'%(flml,s), 'w') as f2:
@@ -46,7 +47,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                         })
 
     def run(self, version, meshsize):
-        print "Running %s with mesh size %dx%d" % (version, meshsize, meshsize)
+        self.log("Running %s with mesh size %dx%d" % (version, meshsize, meshsize))
         t1 = clock()
         self.__getattribute__(version)(meshsize)
         t =  clock() - t1
@@ -71,13 +72,17 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dump', action='store_true', help='Pickle dump')
     parser.add_argument('-c', '--csv', action='store_true', help='Dump to CSV')
     parser.add_argument('-l', '--load', help='Pickle load from file')
+    parser.add_argument('-q', '--quiet', help='Only print errors and warnings')
     args = parser.parse_args()
 
     b = AdvDiffBenchmark()
+    logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.run:
         b.create_input()
+        b.time_all()
+        b.sort_results()
         b.print_result()
         b.compute_speedup()
     if args.dump:

@@ -1,3 +1,4 @@
+from math import sqrt
 import logging
 import os
 import pylab
@@ -19,32 +20,53 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     reference = ('version', 'fluidity')
 
     def dolfin(self, meshsize):
-        self.logged_call("python dolfin_adv_diff.py %d" % meshsize)
+        self.logged_call(self.mpicmd+"python dolfin_adv_diff.py %d" % meshsize)
 
     def fluidity(self, meshsize):
-        self.logged_call('${FLUIDITY_DIR}/bin/fluidity advection_diffusion.%d.flml' % meshsize)
+        self.logged_call(self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity flmls/advection_diffusion.%d.flml' % meshsize)
 
     def fluidity_pyop2(self, meshsize):
-        self.logged_call('${FLUIDITY_DIR}/bin/fluidity ufl_advection_diffusion.%d.flml' % meshsize)
+        self.logged_call('${FLUIDITY_DIR}/bin/fluidity flmls/ufl_advection_diffusion.%d.flml' % meshsize)
 
     def pyop2(self, meshsize):
-        self.logged_call('python pyop2_adv_diff.py -m mesh_%d' % meshsize)
+        self.logged_call('python pyop2_adv_diff.py -m meshes/mesh_%d -b %s' % (meshsize, self.backend))
+
+    def __init__(self, backend='sequential', np=1):
+        super(AdvDiffBenchmark, self).__init__()
+        self.backend=backend
+        self.np=np
+        self.mpicmd = 'mpirun -np %d ' % np if np > 1 else ''
+        self.plotlabels = {
+                'fluidity': 'Fluidity (cores: %d)' % np,
+                'fluidity_pyop2': 'Fluidity-PyOP2 (backend: %s)' % backend,
+                'pyop2': 'PyOP2 (backend: %s)' % backend,
+                'dolfin': 'DOLFIN (cores: %d)' % np
+                }
 
     def create_input(self):
+        if not os.path.exists('meshes'):
+            os.makedirs('meshes')
+        if not os.path.exists('flmls'):
+            os.makedirs('flmls')
         for s in self.meshsize:
-            mesh = 'mesh_%d' % s
+            mesh = os.path.join('meshes','mesh_%d' % s)
             # Generate triangle mesh
             self.log(generate_meshfile(mesh, s, capture=True))
+            # Decompose the mesh if running in parallel
+            if self.np > 1:
+                self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %d %s' \
+                        % (self.np, mesh))
             # Generate flml
             for flml in ['advection_diffusion', 'ufl_advection_diffusion']:
-                with open('%s.flml.template'%flml) as f1, open('%s.%d.flml'%(flml,s), 'w') as f2:
+                with open('%s.flml.template'%flml) as f1, \
+                        open(os.path.join('flmls','%s.%d.flml'%(flml,s)), 'w') as f2:
                     f2.write(f1.read() % {
                         'mesh': mesh,
                         'diffusivity': parameters.diffusivity,
                         'current_time': parameters.current_time,
                         'dt': parameters.dt,
                         'endtime': (parameters.endtime - parameters.dt),
-                        'backend': 'sequential'
+                        'backend': self.backend
                         })
 
     def run(self, version, meshsize):
@@ -87,9 +109,13 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--csv', action='store_true', help='Dump to CSV')
     parser.add_argument('-l', '--load', help='Pickle load from file')
     parser.add_argument('-q', '--quiet', help='Only print errors and warnings')
+    parser.add_argument('-n', '-np', type=int, default=1,
+            help='Number of MPI process (Fluidity, DOLFIN)')
+    parser.add_argument('-b', '--backend', default='sequential',
+            help='Backend (PyOP2, Fluidity-PyOP2)')
     args = parser.parse_args()
 
-    b = AdvDiffBenchmark()
+    b = AdvDiffBenchmark(args.backend, args.n)
     logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
     if args.load and os.path.exists(args.load):
         b.load(args.load)

@@ -58,7 +58,7 @@ class PyOP2Benchmark(Benchmark):
     def _plot(self, fig, plot, col, legend_pos, ylabel, title, show=False):
         f = pylab.figure(fig, figsize=(8, 6), dpi=300)
         for v in self.version:
-            plot(self.plotdata['elements'], self.plotdata[col(v)], label=v)
+            plot(self.plotdata['elements'], self.plotdata[col(v)], label=self.plotlabels[v])
         pylab.legend(loc=legend_pos)
         pylab.xlabel('Number of elements in the mesh')
         pylab.ylabel(ylabel)

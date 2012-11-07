@@ -80,6 +80,8 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
 
       if (r<0.25)
         *t = A*(exp((-(r*r))/(4*D*i_t))/(4*pi*D*i_t));
+      else
+        *t = 0.0;
     }
     """
 

@@ -13,7 +13,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     # Execute for all combinations of these parameters
     parameters = ['version', 'meshsize']
     version = ['fluidity', 'fluidity_pyop2', 'pyop2', 'dolfin']
-    meshsize = [10 * 2**i for i in range(6)]
+    meshsize = [int(10 * sqrt(2)**i) for i in range(11)]
 
     # Compare timings against this parameter value
     reference = ('version', 'fluidity')

@@ -43,7 +43,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                         'diffusivity': parameters.diffusivity,
                         'current_time': parameters.current_time,
                         'dt': parameters.dt,
-                        'endtime': (parameters.endtime - parameters.dt)
+                        'endtime': (parameters.endtime - parameters.dt),
+                        'backend': 'sequential'
                         })
 
     def run(self, version, meshsize):

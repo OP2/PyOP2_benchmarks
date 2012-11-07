@@ -77,16 +77,17 @@ class Benchmark(object):
             return None
         return ref / time
 
+    def log(self, msg=''):
+        print msg
+
     def print_result(self):
         """Run benchmark for all versions and parameters and print results
         in tabular form to the standard output."""
-        self.time_all()
-        self.sort_results()
 
-        print "=" * 78
-        print
-        print self.__class__.__name__
-        print self.__doc__, "\n"
+        self.log("=" * 78)
+        self.log()
+        self.log(self.__class__.__name__)
+        self.log(self.__doc__+"\n")
 
         colwidth = 15
         reftimes = {}
@@ -94,8 +95,8 @@ class Benchmark(object):
         ts = "seconds"
         if self.reference:
             ts += " (x faster than " + (str(self.reference_value)) + ")"
-        print "  ", "   ".join([str(r).ljust(colwidth) for r in self.pnames + [ts]])
-        print "-"*79
+        self.log("  "+"   ".join([str(r).ljust(colwidth) for r in self.pnames + [ts]]))
+        self.log("-"*79)
 
         rows = []
         for vals in self.results:
@@ -110,5 +111,5 @@ class Benchmark(object):
                     stime += ("  (%.2f)" % factor)
             vals = pvalues + (stime,)
             row = [str(val).ljust(colwidth) for val in vals]
-            print "  ", "   ".join(row)
-        print
+            self.log("  "+"   ".join(row))
+        self.log()

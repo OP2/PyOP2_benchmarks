@@ -1,7 +1,10 @@
 #!/usr/bin/env python
-from optparse import OptionParser
+
+"Generate the mesh files for a given number of layers of elements in the channel."
+
+from argparse import ArgumentParser
 import sys
-import os
+import subprocess
 
 meshtemplate='''
 Point(1) = {0, 0, 0, %(dx)f};
@@ -13,32 +16,23 @@ Extrude {0, 1, 0} {
 }
 '''
 
-def generate_meshfile(name,layers):
+def generate_meshfile(name, layers, capture=False):
 
+    with open(name+".geo",'w') as f:
+        f.write(meshtemplate % {'dx': 1./layers, 'layers': layers})
 
-    file(name+".geo",'w').write(meshtemplate % {'dx': 1./layers, 'layers': layers})
-
-    os.system("gmsh -2 "+name+".geo")
-    os.system("./gmsh2triangle --2d "+name+".msh")
+    cmd = "gmsh -2 "+name+".geo && ./gmsh2triangle --2d "+name+".msh"
+    if capture:
+        return subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
+    return subprocess.call(cmd, shell=True)
 
 #####################################################################
 # Script starts here.
 
 if __name__ == '__main__':
-    optparser=OptionParser(usage='usage: %prog [options] <name> <layers>',
-                           add_help_option=True,
-                           description="""Generate the mesh files for a given"""+
-                   """number of layers of elements in the channel.""")
+    parser=ArgumentParser(add_help=True, description=__doc__)
+    parser.add_argument('name', help='Base name for the generated output files')
+    parser.add_argument('layers', type=int, help='Number of layers to generate')
+    args = parser.parse_args()
 
-    (options, argv) = optparser.parse_args()
-
-    try:
-        name=argv[0]
-        layers=int(argv[1])
-    except:
-        optparser.print_help()
-        sys.exit(1)
-
-    sys.path.append(".")
-
-    generate_meshfile(name,layers)
+    sys.exit(generate_meshfile(args.name, args.layers))

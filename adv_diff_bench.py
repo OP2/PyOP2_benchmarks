@@ -57,6 +57,19 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.plotdata[version].append(t)
         return t
 
+    def time_all(self):
+        self.log('PyOP2 version:')
+        self.logged_call('GIT_DIR=${PYOP2_DIR}/.git git rev-parse HEAD')
+        self.log('Fluidity version:')
+        self.logged_call('bzr revision-info -d ${FLUIDITY_DIR}')
+        self.log('UFL version:')
+        self.logged_call('bzr revision-info -d ${UFL_DIR}')
+        self.log('FFC version:')
+        self.logged_call('bzr revision-info -d ${FFC_DIR}')
+        self.log('DOLFIN version:')
+        self.logged_call('bzr revision-info -d ${DOLFIN_DIR}')
+        super(AdvDiffBenchmark, self).time_all()
+
     def plot_result(self):
         title = 'Benchmark of an advection-diffusion problem for 100 time steps'
         for fig, pl in zip(('linear', 'semilogx'), (pylab.plot, pylab.semilogx)):

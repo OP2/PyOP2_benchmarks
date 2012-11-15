@@ -63,10 +63,9 @@
       <prescribed>
         <mesh name="VelocityMesh"/>
         <value name="WholeMesh">
-          <python>
-            <string_value lines="20" type="code" language="python">def val(x, t):
-    return (1.0, 0.0)</string_value>
-          </python>
+          <constant>
+            <real_value shape="2" dim1="dim" rank="1">1.0 0.0</real_value>
+          </constant>
         </value>
         <output>
           <exclude_from_vtu/>
@@ -84,7 +83,8 @@
         <mesh name="VelocityMesh"/>
         <equation name="UFL">
           <string_value lines="20" type="code" language="python">t=state.scalar_fields["Tracer"]
-u=state.vector_fields["Velocity"]
+#u=state.vector_fields["Velocity"]
+u=as_vector([1, 0])
 
 p=TrialFunction(t)
 q=TestFunction(t)

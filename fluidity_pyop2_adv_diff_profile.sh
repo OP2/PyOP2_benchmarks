@@ -31,16 +31,16 @@ with open('${flml}.profile.flml.template') as f1, \
         'current_time': current_time,
         'dt': dt,
         'endtime': (endtime - dt),
-        'backend': '${b}',
-        'profile': '${i}.${backend}'
+        'backend': '${b}'
         })
 EOF
-    PYOPENCL_CTX=${ctx} ${FLUIDITY_DIR}/bin/fluidity flmls/${flml}.${i}.profile.flml
+    PYOPENCL_CTX=${ctx} time ${FLUIDITY_DIR}/bin/fluidity flmls/${flml}.${i}.profile.flml
+    python concat.py '*.part' ${flml}.${i}.${backend}.cprofile.dat
     gprof2dot -f pstats -n 1 ${flml}.${i}.${backend}.cprofile.dat \
       | dot -Tpdf -o ${flml}.${i}.${backend}.cprofile.pdf
     gprof ${FLUIDITY_DIR}/bin/fluidity gmon.out > ${flml}.${i}.${backend}.gprof.dat
     gprof2dot -n 1 ${flml}.${i}.${backend}.gprof.dat \
       | dot -Tpdf -o ${flml}.${i}.${backend}.gprof.pdf
-    rm gmon.out
+    rm *.part gmon.out
   done
 done

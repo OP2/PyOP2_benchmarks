@@ -80,7 +80,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.plotdata[version].append(t)
         return t
 
-    def time_all(self):
+    def time_all(self, message=''):
+        self.log(message+'\n')
         self.log('PyOP2 version:')
         self.logged_call('GIT_DIR=${PYOP2_DIR}/.git git rev-parse HEAD')
         self.log('Fluidity version:')
@@ -115,6 +116,8 @@ if __name__ == '__main__':
             help='Number of MPI process (Fluidity, DOLFIN)')
     parser.add_argument('-b', '--backend', default='sequential',
             help='Backend (PyOP2, Fluidity-PyOP2)')
+    parser.add_argument('-m', '--message', default='',
+            help='Message, added to the log output')
     args = parser.parse_args()
 
     b = AdvDiffBenchmark(args.backend, args.n)
@@ -124,7 +127,7 @@ if __name__ == '__main__':
     if args.run:
         if not args.skip_create_input:
             b.create_input()
-        b.time_all()
+        b.time_all(args.message)
         b.sort_results()
         b.print_result()
         b.compute_speedup()

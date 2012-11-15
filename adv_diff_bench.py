@@ -35,7 +35,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         super(AdvDiffBenchmark, self).__init__()
         self.backend=backend
         self.np=np
-        self.mpicmd = 'mpirun -np %d ' % np if np > 1 else ''
+        self.mpicmd = 'mpirun --bycore --bysocket --bind-to-socket --bind-to-core -np %d ' % np if np > 1 else ''
         self.plotlabels = {
                 'fluidity': 'Fluidity (cores: %d)' % np,
                 'fluidity_pyop2': 'Fluidity-PyOP2 (backend: %s)' % backend,

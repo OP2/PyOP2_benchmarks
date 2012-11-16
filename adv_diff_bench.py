@@ -31,10 +31,11 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     def pyop2(self, meshsize):
         self.logged_call('python pyop2_adv_diff.py -m meshes/mesh_%d -b %s' % (meshsize, self.backend))
 
-    def __init__(self, backend='sequential', np=1):
+    def __init__(self, backend='sequential', np=1, message=''):
         super(AdvDiffBenchmark, self).__init__()
         self.backend=backend
         self.np=np
+        self.message=message
         self.mpicmd = 'mpirun --bycore --bysocket --bind-to-socket --bind-to-core -np %d ' % np if np > 1 else ''
         self.plotlabels = {
                 'fluidity': 'Fluidity (cores: %d)' % np,
@@ -80,8 +81,9 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.plotdata[version].append(t)
         return t
 
-    def time_all(self, message=''):
-        self.log(message+'\n')
+    def time_all(self):
+        if self.message:
+            self.log(self.message+'\n')
         self.log('PyOP2 version:')
         self.logged_call('GIT_DIR=${PYOP2_DIR}/.git git rev-parse HEAD')
         self.log('Fluidity version:')
@@ -120,14 +122,14 @@ if __name__ == '__main__':
             help='Message, added to the log output')
     args = parser.parse_args()
 
-    b = AdvDiffBenchmark(args.backend, args.n)
+    b = AdvDiffBenchmark(args.backend, args.n, args.message)
     logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.run:
         if not args.skip_create_input:
             b.create_input()
-        b.time_all(args.message)
+        b.time_all()
         b.sort_results()
         b.print_result()
         b.compute_speedup()

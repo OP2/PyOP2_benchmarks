@@ -19,6 +19,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     # Compare timings against this parameter value
     reference = ('version', 'fluidity')
 
+    plotstyle = dict(zip(version, ['k-o', 'g-s', 'r-d', 'b-^']))
+
     def dolfin(self, meshsize):
         self.logged_call(self.mpicmd+"python dolfin_adv_diff.py %d" % meshsize)
 
@@ -97,7 +99,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         super(AdvDiffBenchmark, self).time_all()
 
     def plot_result(self):
-        title = 'Benchmark of an advection-diffusion problem for 100 time steps'
+        title = self.message or 'Benchmark of an advection-diffusion problem for 100 time steps'
         for fig, pl in zip(('linear', 'semilogx'), (pylab.plot, pylab.semilogx)):
             self._plot('runtime_'+fig, pl, lambda x: x, 'upper left', 'Overall runtime in seconds', title)
             self._plot('speedup_'+fig, pl, lambda x: x+'_speedup', 'lower right', 'Relative speedup over Fluidity baseline', title)

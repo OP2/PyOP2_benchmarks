@@ -98,11 +98,12 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.logged_call('bzr revision-info -d ${DOLFIN_DIR}')
         super(AdvDiffBenchmark, self).time_all()
 
-    def plot_result(self):
+    def plot_result(self, format='svg'):
+        title = 'Benchmark of an advection-diffusion problem for 100 time steps'
         title = self.message or 'Benchmark of an advection-diffusion problem for 100 time steps'
         for fig, pl in zip(('linear', 'semilogx'), (pylab.plot, pylab.semilogx)):
-            self._plot('runtime_'+fig, pl, lambda x: x, 'upper left', 'Overall runtime in seconds', title)
-            self._plot('speedup_'+fig, pl, lambda x: x+'_speedup', 'lower right', 'Relative speedup over Fluidity baseline', title)
+            self._plot('runtime_'+fig, pl, lambda x: x, 'upper left', 'Overall runtime in seconds', title, format)
+            self._plot('speedup_'+fig, pl, lambda x: x+'_speedup', 'lower right', 'Relative speedup over Fluidity baseline', title, format)
 
 if __name__ == '__main__':
 

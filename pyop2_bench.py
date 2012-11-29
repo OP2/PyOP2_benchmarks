@@ -55,7 +55,7 @@ class PyOP2Benchmark(Benchmark):
             for this, base in zip(self.plotdata[v], self.plotdata[self.reference[1]]):
                 self.plotdata[v+'_speedup'].append(base/this)
 
-    def _plot(self, fig, plot, col, legend_pos, ylabel, title, show=False):
+    def _plot(self, fig, plot, col, legend_pos, ylabel, title, format='svg'):
         f = pylab.figure(fig, figsize=(8, 6), dpi=300)
         for v in self.version:
             plot(self.plotdata['elements'], self.plotdata[col(v)], self.plotstyle[v], lw=2, label=self.plotlabels[v])
@@ -64,7 +64,9 @@ class PyOP2Benchmark(Benchmark):
         pylab.ylabel(ylabel)
         pylab.title(title)
         pylab.grid()
-        pylab.savefig(self._path('%s.svg' % fig), orientation='landscape', format='svg', transparent=True)
-        if show:
+        if not format:
             pylab.show()
+        else:
+            for fmt in format.split(','):
+                pylab.savefig(self._path('%s.%s' % (fig,fmt)), orientation='landscape', format=fmt, transparent=True)
         pylab.close(f)

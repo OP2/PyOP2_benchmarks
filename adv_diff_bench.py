@@ -87,15 +87,15 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         if self.message:
             self.log(self.message+'\n')
         self.log('PyOP2 version:')
-        self.logged_call('GIT_DIR=${PYOP2_DIR}/.git git rev-parse HEAD')
+        self.logged_call('git --git-dir=%s/.git rev-parse HEAD' % os.environ['PYOP2_DIR'])
         self.log('Fluidity version:')
-        self.logged_call('bzr revision-info -d ${FLUIDITY_DIR}')
+        self.logged_call('bzr revision-info -d %s' % os.environ['FLUIDITY_DIR'])
         self.log('UFL version:')
-        self.logged_call('bzr revision-info -d ${UFL_DIR}')
+        self.logged_call('bzr revision-info -d %s' % os.environ['UFL_DIR'])
         self.log('FFC version:')
-        self.logged_call('bzr revision-info -d ${FFC_DIR}')
+        self.logged_call('bzr revision-info -d %s' % os.environ['FFC_DIR'])
         self.log('DOLFIN version:')
-        self.logged_call('bzr revision-info -d ${DOLFIN_DIR}')
+        self.logged_call('bzr revision-info -d %s' % os.environ['DOLFIN_DIR'])
         super(AdvDiffBenchmark, self).time_all()
 
     def plot_result(self, format='svg'):

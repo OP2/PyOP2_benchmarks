@@ -6,3 +6,10 @@ def advection_diffusion(x, t):
     D = 0.1 # Diffusivity
     A = 0.1 # Normalisation
     return A*(exp((-r**2)/(4*D*t))/(4*pi*D*t))
+
+def helmholtz(X,t,n=8):
+    return -cos(X[0]*pi*n)*cos(X[1]*pi*n)
+
+def helmholtz_initial(X,t,n=8):
+    lmbda = 1
+    return -(lmbda+2*(n**2)*pi**2) * cos(X[0]*pi*n)*cos(X[1]*pi*n)

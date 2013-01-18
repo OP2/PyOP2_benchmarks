@@ -1,7 +1,5 @@
-import sys
-
 from dolfin import *
-from analytical_solution import advection_diffusion as val
+from analytical_solution import advection_diffusion as initial
 
 parameters["form_compiler"]["cpp_optimize"] = True
 
@@ -12,15 +10,18 @@ class InitialCondition(Expression):
     def eval(self, values, x):
         values[0] = self._fn(x, 0.1)
 
-def simulation(D, t, dt, endtime, mesh, initial):
+def simulation(meshsize, degree):
+    from parameters import diffusivity as D, current_time as t, dt, endtime
 
     set_log_level(ERROR)
 
+    mesh = UnitSquareMesh(meshsize, meshsize)
+    mesh.init()
     # Added due to mesh not conforming to UFC numbering, allegedly
     mesh.order()
 
     # Create FunctionSpaces
-    T = FunctionSpace(mesh, "CG", 1)
+    T = FunctionSpace(mesh, "CG", degree)
 
     # Create velocity Function
     velocity = Constant( (1.0, 0.0) )
@@ -67,12 +68,19 @@ def simulation(D, t, dt, endtime, mesh, initial):
         # Next timestep
         t += dt
 
-def run(meshsize):
-    from parameters import diffusivity, current_time, dt, endtime
-    mesh = UnitSquare(meshsize, meshsize)
-    mesh.init()
+    # Save solution in VTK format
+    file = File("dolfin_adv_diff_p%d_%d.pvd" % (degree, meshsize))
+    file << u1
 
-    simulation(diffusivity, current_time, dt, endtime, mesh, val)
+def run(meshsize, degree):
+    simulation(diffusivity, current_time, dt, endtime, meshsize, degree)
 
 if __name__ == '__main__':
-    run(int(sys.argv[1]))
+    import sys
+    d = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+    if len(sys.argv) > 1:
+        simulation(int(sys.argv[1]), d)
+    else:
+        for d in range(1,3):
+            for i in range(4):
+                simulation(30*2**i, d)

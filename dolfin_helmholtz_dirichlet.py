@@ -1,14 +1,9 @@
 from dolfin import *
+
+from test_utils import *
 from analytical_solution import helmholtz_initial_sin as initial
 
 parameters["form_compiler"]["cpp_optimize"] = True
-
-class InitialCondition(Expression):
-    def __init__(self, fn):
-        self._fn = fn
-
-    def eval(self, values, x):
-        values[0] = self._fn(x, 0.0)
 
 def simulation(meshsize, degree):
 
@@ -44,11 +39,4 @@ def simulation(meshsize, degree):
     file << f
 
 if __name__ == '__main__':
-    import sys
-    d = int(sys.argv[2]) if len(sys.argv) > 2 else 1
-    if len(sys.argv) > 1:
-        simulation(int(sys.argv[1]), d)
-    else:
-        for d in range(1,3):
-            for i in range(4):
-                simulation(30*2**i, d)
+    test_main(simulation)

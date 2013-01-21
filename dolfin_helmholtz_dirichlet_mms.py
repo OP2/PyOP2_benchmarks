@@ -3,7 +3,8 @@ from dolfin import *
 from test_utils import *
 from analytical_solution import helmholtz_initial_sin as initial, helmholtz_sin as analytical
 
-parameters["form_compiler"]["cpp_optimize"] = True
+parameters.form_compiler.cpp_optimize = True
+parameters.krylov_solver.relative_tolerance = 1e-7
 
 def simulation(meshsize, degree, n=8):
 
@@ -34,7 +35,8 @@ def simulation(meshsize, degree, n=8):
             x[0] < DOLFIN_EPS or x[0] > 1.0 - DOLFIN_EPS or \
             x[1] < DOLFIN_EPS or x[1] > 1.0 - DOLFIN_EPS)
 
-    solve(A==RHS, f, bcs=bc, solver_parameters={"linear_solver": "cg", "preconditioner": "jacobi"})
+    M, b = assemble_system(A, RHS, bc)
+    solve(M, f.vector(), b, "cg", "jacobi")
 
     return sqrt(assemble((f-f_analytic)**2*dx))
 

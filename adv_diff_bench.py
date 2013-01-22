@@ -47,6 +47,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
     def __init__(self, np=1, message=''):
         super(AdvDiffBenchmark, self).__init__()
+        self.log("Running versions: %s" % AdvDiffBenchmark.version)
         self.np=np
         self.message=message
         self.mpicmd = 'mpirun --bycore --bysocket --bind-to-socket --bind-to-core -np %d ' % np if np > 1 else ''
@@ -135,6 +136,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--plot', action='store_true', help='plot results')
     parser.add_argument('-d', '--dump', action='store_true', help='Pickle dump')
     parser.add_argument('-c', '--csv', action='store_true', help='Dump to CSV')
+    parser.add_argument('-v', '--versions', nargs='+', help='Versions to run')
     parser.add_argument('-l', '--load', help='Pickle load from file')
     parser.add_argument('-q', '--quiet', help='Only print errors and warnings')
     parser.add_argument('-s', '--create-input', action='store_true',
@@ -145,8 +147,11 @@ if __name__ == '__main__':
             help='Message, added to the log output')
     args = parser.parse_args()
 
-    b = AdvDiffBenchmark(args.n, args.message)
+    if args.versions:
+        AdvDiffBenchmark.version = args.versions
+
     logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
+    b = AdvDiffBenchmark(args.n, args.message)
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.create_input:

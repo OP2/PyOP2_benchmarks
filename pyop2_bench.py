@@ -20,6 +20,7 @@ class PyOP2Benchmark(Benchmark):
 
     def time_all(self):
         self.logged_call('uname -a')
+        self.log('Timestamp: %s' % self.timestamp)
         self.log('=== Start Benchmark run at %s ===\n' % datetime.today())
         super(PyOP2Benchmark, self).time_all()
         self.log('=== Finish Benchmark run at %s ===\n' % datetime.today())

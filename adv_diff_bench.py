@@ -19,7 +19,6 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     # Compare timings against this parameter value
     reference = ('version', 'fluidity')
 
-    plotstyle = dict(zip(version, ['k-o', 'g-s', 'r-d', 'b-^']))
 
     def dolfin(self, meshsize):
         self.logged_call(self.mpicmd+"python dolfin_adv_diff.py %d" % meshsize)
@@ -50,13 +49,21 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.log("Running versions: %s" % AdvDiffBenchmark.version)
         self.log("Reference %s: %s" % AdvDiffBenchmark.reference)
         self.np=np
+        AdvDiffBenchmark.plotstyle = dict(zip(AdvDiffBenchmark.version, ['k-o', 'g-s', 'r-d', 'b-^']))
         self.message=message
         self.mpicmd = 'mpirun --bycore --bysocket --bind-to-socket --bind-to-core -np %d ' % np if np > 1 else ''
+        self.set_plotlabels()
+
+    def set_plotlabels(self):
         self.plotlabels = {
-                'fluidity': 'Fluidity (cores: %d)' % np,
+                'fluidity': 'Fluidity (cores: %d)' % self.np,
                 'fluidity_pyop2_seq': 'Fluidity-PyOP2 (backend: sequential)',
+                'fluidity_pyop2_cuda': 'Fluidity-PyOP2 (backend: cuda)',
+                'fluidity_pyop2_openmp': 'Fluidity-PyOP2 (backend: openmp)',
                 'pyop2_seq': 'PyOP2 (backend: sequential)',
-                'dolfin': 'DOLFIN (cores: %d)' % np
+                'pyop2_openmp': 'PyOP2 (backend: OpenMP)',
+                'pyop2_cuda': 'PyOP2 (backend: CUDA)',
+                'dolfin': 'DOLFIN (cores: %d)' % self.np
                 }
 
     def create_input(self):
@@ -161,6 +168,7 @@ if __name__ == '__main__':
     b = AdvDiffBenchmark(args.n, args.message)
     if args.load and os.path.exists(args.load):
         b.load(args.load)
+        b.set_plotlabels()
     if args.create_input:
         b.create_input()
     if args.run:

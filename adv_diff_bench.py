@@ -40,6 +40,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.meshsize = meshsize or [int(10 * sqrt(2)**i) for i in range(11)]
         parameters = parameters or ['version', 'meshsize']
         self.version = version or ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']
+        self.primed = []
         # Compare timings against this parameter value
         self.reference = reference or ('version', 'fluidity')
         super(AdvDiffBenchmark, self).__init__(parameters)
@@ -100,7 +101,14 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                         })
 
 
+    def dry_run(self, version, meshsize):
+        if version not in self.primed:
+            self.log("Performing dry run of %s using mesh size %dx%d" % (version, meshsize, meshsize))
+            self.__getattribute__(version)(meshsize)
+            self.primed.append(version)
+
     def run(self, version, meshsize):
+        self.dry_run(version, meshsize)
         self.log("Running %s with mesh size %dx%d" % (version, meshsize, meshsize))
         t1 = clock()
         self.__getattribute__(version)(meshsize)

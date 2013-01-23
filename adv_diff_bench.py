@@ -11,15 +11,6 @@ import parameters
 class AdvDiffBenchmark(PyOP2Benchmark):
     """PyOP2 vs. Fluidity vs. DOLFIN benchmark."""
 
-    # Execute for all combinations of these parameters
-    parameters = ['version', 'meshsize']
-    version = ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']
-    meshsize = [int(10 * sqrt(2)**i) for i in range(11)]
-
-    # Compare timings against this parameter value
-    reference = ('version', 'fluidity')
-
-
     def dolfin(self, meshsize):
         self.logged_call(self.mpicmd+"python dolfin_adv_diff.py %d" % meshsize)
 
@@ -44,17 +35,23 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     def pyop2_cuda(self, meshsize):
         self.logged_call('python pyop2_adv_diff.py -m meshes/mesh_%d -b cuda' % meshsize)
 
-    def __init__(self, np=1, message=''):
-        super(AdvDiffBenchmark, self).__init__()
-        self.log("Running versions: %s" % AdvDiffBenchmark.version)
-        self.log("Reference %s: %s" % AdvDiffBenchmark.reference)
+    def __init__(self, np=1, message='', version=None, reference=None, meshsize=None, parameters=None):
+        # Execute for all combinations of these parameters
+        self.meshsize = meshsize or [int(10 * sqrt(2)**i) for i in range(11)]
+        parameters = parameters or ['version', 'meshsize']
+        self.version = version or ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']
+        # Compare timings against this parameter value
+        self.reference = reference or ('version', 'fluidity')
+        super(AdvDiffBenchmark, self).__init__(parameters)
+
+        self.log("Running versions: %s" % self.version)
+        self.log("Reference %s: %s" % self.reference)
+
         self.np=np
-        AdvDiffBenchmark.plotstyle = dict(zip(AdvDiffBenchmark.version, ['k-o', 'g-s', 'r-d', 'b-^']))
         self.message=message
         self.mpicmd = 'mpirun --bycore --bysocket --bind-to-socket --bind-to-core -np %d ' % np if np > 1 else ''
-        self.set_plotlabels()
 
-    def set_plotlabels(self):
+        self.plotstyle = dict(zip(self.version, ['k-o', 'g-s', 'r-d', 'b-^']))
         self.plotlabels = {
                 'fluidity': 'Fluidity (cores: %d)' % self.np,
                 'fluidity_pyop2_seq': 'Fluidity-PyOP2 (backend: sequential)',
@@ -156,19 +153,10 @@ if __name__ == '__main__':
             help='Message, added to the log output')
     args = parser.parse_args()
 
-    if args.versions:
-        AdvDiffBenchmark.version = args.versions
-    if args.reference:
-        AdvDiffBenchmark.reference = ('version', args.reference)
-
-    if args.plot:
-        print "going to plot."
-
     logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
-    b = AdvDiffBenchmark(args.n, args.message)
+    b = AdvDiffBenchmark(args.n, args.message, args.versions, args.reference)
     if args.load and os.path.exists(args.load):
         b.load(args.load)
-        b.set_plotlabels()
     if args.create_input:
         b.create_input()
     if args.run:

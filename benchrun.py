@@ -30,12 +30,12 @@ class Benchmark(object):
     sort_by = []
     reference = None
 
-    def __init__(self):
+    def __init__(self, parameters):
         self.pnames = []
         self.pvalues = []
         self.results = []
         self.results_dict = {}
-        for pname in self.parameters:
+        for pname in parameters:
             value = getattr(self, pname)
             self.pnames.append(pname)
             self.pvalues.append(value)

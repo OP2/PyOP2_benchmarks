@@ -12,8 +12,8 @@ from benchrun import Benchmark
 class PyOP2Benchmark(Benchmark):
     """Abstract base class for PyOP2 benchmarks."""
 
-    def __init__(self):
-        super(PyOP2Benchmark, self).__init__()
+    def __init__(self, parameters):
+        super(PyOP2Benchmark, self).__init__(parameters)
         self.plotdata = defaultdict(list)
         self.timestamp = datetime.today().isoformat().replace(':', '')
         logging.basicConfig(format='%(message)s')

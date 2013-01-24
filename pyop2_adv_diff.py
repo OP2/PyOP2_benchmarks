@@ -106,10 +106,7 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
     have_advection = True
     have_diffusion = True
 
-    t1 = clock()
-
-    while current_time < endtime:
-
+    def timestep_iteration():
         # Advection
 
         if have_advection:
@@ -149,9 +146,17 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
 
             op2.solve(mat, tracer, b)
 
+    # Perform 1 iteration to warm up plan cache then reset initial condition
+    timestep_iteration()
+    op2.par_loop(i_cond, nodes,
+                 coords(op2.IdentityMap, op2.READ),
+                 tracer(op2.IdentityMap, op2.WRITE))
 
+    # Timed iteration
+    t1 = clock()
+    while current_time < endtime:
+        timestep_iteration()
         current_time += dt
-
     runtime = clock() - t1
     print "/fluidity :: %f" % runtime
 

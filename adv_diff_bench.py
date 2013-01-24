@@ -42,7 +42,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.version = version or ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']
         self.primed = []
         # Compare timings against this parameter value
-        self.reference = reference or ('version', 'fluidity')
+        self.reference = ('version', reference or 'fluidity')
         super(AdvDiffBenchmark, self).__init__(parameters)
 
         self.log("Running versions: %s" % self.version)

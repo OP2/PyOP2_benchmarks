@@ -37,7 +37,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
     def __init__(self, np=1, message='', version=None, reference=None, meshsize=None, parameters=None):
         # Execute for all combinations of these parameters
-        self.meshsize = meshsize or [101, 142, 174, 201, 225, 246, 266, 284, 301, 317, 333, 347, 362, 375, 388]
+        #self.meshsize = meshsize or [101, 142, 174, 201, 225, 246, 266, 284, 301, 317, 333, 347, 362, 375, 388]
+        self.meshsize = meshsize or [101, 174, 225, 266, 301, 333, 362, 388]
         #[int(10 * sqrt(2)**i) for i in range(11)]
         parameters = parameters or ['version', 'meshsize']
         self.version = version or ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']
@@ -51,7 +52,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
         self.np=np
         self.message=message
-        self.mpicmd = 'mpirun --bycore --bysocket --bind-to-socket --bind-to-core -np %d ' % np if np > 1 else ''
+        self.mpicmd = 'mpiexec %d ' % np if np > 1 else ''
 
         self.plotstyle = dict(zip(self.version, ['k-o', 'g-s', 'r-d', 'b-^']))
         self.plotlabels = {

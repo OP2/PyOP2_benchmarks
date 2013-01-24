@@ -12,28 +12,28 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     """PyOP2 vs. Fluidity vs. DOLFIN benchmark."""
 
     def dolfin(self, meshsize):
-        self.logged_call(self.mpicmd+"python dolfin_adv_diff.py %d" % meshsize)
+        return self.logged_call_with_time(self.mpicmd+"python dolfin_adv_diff.py %d" % meshsize)
 
     def fluidity(self, meshsize):
-        self.logged_call(self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity flmls/advection_diffusion.%d.flml' % meshsize)
+        return self.logged_call_with_time(self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%d.flml' % meshsize)
 
     def fluidity_pyop2_seq(self, meshsize):
-        self.logged_call('${FLUIDITY_DIR}/bin/fluidity flmls/ufl_advection_diffusion.sequential.%d.flml' % meshsize)
+        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%d.flml' % meshsize)
 
     def fluidity_pyop2_openmp(self, meshsize):
-        self.logged_call('${FLUIDITY_DIR}/bin/fluidity flmls/ufl_advection_diffusion.openmp.%d.flml' % meshsize)
+        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.openmp.%d.flml' % meshsize)
 
     def fluidity_pyop2_cuda(self, meshsize):
-        self.logged_call('${FLUIDITY_DIR}/bin/fluidity flmls/ufl_advection_diffusion.cuda.%d.flml' % meshsize)
+        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.cuda.%d.flml' % meshsize)
 
     def pyop2_seq(self, meshsize):
-        self.logged_call('python pyop2_adv_diff.py -m meshes/mesh_%d -b sequential' % meshsize)
+        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/mesh_%d -b sequential' % meshsize)
 
     def pyop2_openmp(self, meshsize):
-        self.logged_call('python pyop2_adv_diff.py -m meshes/mesh_%d -b openmp' % meshsize)
+        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/mesh_%d -b openmp' % meshsize)
 
     def pyop2_cuda(self, meshsize):
-        self.logged_call('python pyop2_adv_diff.py -m meshes/mesh_%d -b cuda' % meshsize)
+        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/mesh_%d -b cuda' % meshsize)
 
     def __init__(self, np=1, message='', version=None, reference=None, meshsize=None, parameters=None):
         # Execute for all combinations of these parameters
@@ -110,9 +110,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     def run(self, version, meshsize):
         self.dry_run(version, meshsize)
         self.log("Running %s with mesh size %dx%d" % (version, meshsize, meshsize))
-        t1 = clock()
-        self.__getattribute__(version)(meshsize)
-        t =  clock() - t1
+        t = self.__getattribute__(version)(meshsize)
         elems = 2*meshsize*meshsize
         if not elems in self.plotdata['elements']:
             self.plotdata['elements'].append(elems)

@@ -10,6 +10,7 @@ This may also depend on development trunk versions of other FEniCS programs.
 
 import numpy as np
 
+from benchrun import clock
 from pyop2 import op2, utils
 from pyop2.ffc_interface import compile_form
 from triangle_reader import read_triangle
@@ -105,6 +106,8 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
     have_advection = True
     have_diffusion = True
 
+    t1 = clock()
+
     while current_time < endtime:
 
         # Advection
@@ -148,6 +151,9 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
 
 
         current_time += dt
+
+    runtime = clock() - t1
+    print "/fluidity :: %f" % runtime
 
 if __name__ == '__main__':
     from parameters import *

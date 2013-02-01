@@ -4,6 +4,8 @@ import csv
 import pickle
 from collections import defaultdict
 from datetime import datetime
+import matplotlib as mpl
+mpl.use("Agg")
 import pylab
 import subprocess
 

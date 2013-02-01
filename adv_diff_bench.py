@@ -15,6 +15,9 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         return self.logged_call_with_time(self.mpicmd+"python dolfin_adv_diff.py %d" % meshsize)
 
     def fluidity(self, meshsize):
+        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%d.flml' % meshsize)
+
+    def fluidity_mpi(self, meshsize):
         return self.logged_call_with_time(self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%d.flml' % meshsize)
 
     def fluidity_pyop2_seq(self, meshsize):
@@ -38,7 +41,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     def __init__(self, np=1, message='', version=None, reference=None, meshsize=None, parameters=None):
         # Execute for all combinations of these parameters
         #self.meshsize = meshsize or [101, 142, 174, 201, 225, 246, 266, 284, 301, 317, 333, 347, 362, 375, 388]
-        self.meshsize = meshsize or [101, 174, 225, 266, 301, 333, 362, 388]
+        #self.meshsize = meshsize or [101, 174, 225, 266, 301, 333, 362, 388]
+        self.meshsize = [317, 448, 549, 633]#, 708]
         #[int(10 * sqrt(2)**i) for i in range(11)]
         parameters = parameters or ['version', 'meshsize']
         self.version = version or ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']
@@ -52,11 +56,12 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
         self.np=np
         self.message=message
-        self.mpicmd = 'mpiexec %d ' % np if np > 1 else ''
+        self.mpicmd = 'mpiexec ' if np>1 else ''
 
         self.plotstyle = dict(zip(self.version, ['k-o', 'g-s', 'r-d', 'b-^']))
         self.plotlabels = {
-                'fluidity': 'Fluidity (cores: %d)' % self.np,
+                'fluidity': 'Fluidity (cores: 1)',
+                'fluidity_mpi': 'Fluidity (cores: %d)' % self.np,
                 'fluidity_pyop2_seq': 'Fluidity-PyOP2 (backend: sequential)',
                 'fluidity_pyop2_cuda': 'Fluidity-PyOP2 (backend: cuda)',
                 'fluidity_pyop2_openmp': 'Fluidity-PyOP2 (backend: openmp)',

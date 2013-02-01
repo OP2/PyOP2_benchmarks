@@ -1,6 +1,7 @@
 import sys
 
 from dolfin import *
+from time import time
 from analytical_solution import advection_diffusion as val
 
 parameters["form_compiler"]["cpp_optimize"] = True
@@ -72,7 +73,9 @@ def run(meshsize):
     mesh = UnitSquare(meshsize, meshsize)
     mesh.init()
 
+    t1 = time()
     simulation(diffusivity, current_time, dt, endtime, mesh, val)
+    print "/fluidity :: %f" % (time()-t1)
 
 if __name__ == '__main__':
     run(int(sys.argv[1]))

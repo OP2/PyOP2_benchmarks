@@ -21,13 +21,13 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         return self.logged_call_with_time(self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%d.flml' % meshsize)
 
     def fluidity_pyop2_seq(self, meshsize):
-        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%d.flml' % meshsize)
+        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%d.flml' % meshsize)
 
     def fluidity_pyop2_openmp(self, meshsize):
-        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.openmp.%d.flml' % meshsize)
+        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.openmp.%d.flml' % meshsize)
 
     def fluidity_pyop2_cuda(self, meshsize):
-        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.cuda.%d.flml' % meshsize)
+        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.cuda.%d.flml' % meshsize)
 
     def pyop2_seq(self, meshsize):
         return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/mesh_%d -b sequential' % meshsize)

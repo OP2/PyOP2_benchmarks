@@ -12,6 +12,7 @@ import numpy as np
 
 from benchrun import clock
 from pyop2 import op2, utils
+from pyop2.profiling import tic, toc, summary, reset
 from pyop2.ffc_interface import compile_form
 from triangle_reader import read_triangle
 from ufl import *
@@ -110,6 +111,8 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
         # Advection
 
         if have_advection:
+            tic('advection')
+            tic('assembly')
             mat.zero()
 
             op2.par_loop(mass, elements(3,3),
@@ -124,12 +127,17 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
                          coords(elem_node, op2.READ),
                          tracer(elem_node, op2.READ),
                          velocity(elem_node, op2.READ))
-
+            toc('assembly')
+            tic('solve')
             op2.solve(mat, tracer, b)
+            toc('solve')
+            toc('advection')
 
         # Diffusion
 
         if have_diffusion:
+            tic('diffusion')
+            tic('assembly')
             mat.zero()
 
             op2.par_loop(diff_matrix, elements(3,3),
@@ -144,13 +152,18 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
                          coords(elem_node, op2.READ),
                          tracer(elem_node, op2.READ))
 
+            toc('assembly')
+            tic('solve')
             op2.solve(mat, tracer, b)
+            toc('solve')
+            toc('diffusion')
 
     # Perform 1 iteration to warm up plan cache then reset initial condition
     timestep_iteration()
     op2.par_loop(i_cond, nodes,
                  coords(op2.IdentityMap, op2.READ),
                  tracer(op2.IdentityMap, op2.WRITE))
+    reset()
 
     # Timed iteration
     t1 = clock()
@@ -159,6 +172,7 @@ def run(diffusivity, current_time, dt, endtime, **kwargs):
         current_time += dt
     runtime = clock() - t1
     print "/fluidity :: %f" % runtime
+    summary('profile_pyop2_%s_%s.csv' % (opt['mesh'].split('/')[-1], opt['backend']))
 
 if __name__ == '__main__':
     from parameters import *

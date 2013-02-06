@@ -52,6 +52,15 @@ class PyOP2Benchmark(Benchmark):
                     time = float(line.split(' ')[2])
         self.log(msg)
         return time
+    
+    def flufl_call_with_time(self, call):
+        msg = subprocess.check_output(call, stderr=subprocess.STDOUT, shell=True)
+        for line in msg.split('\n'):
+            if line.find('UFL ::') != -1:
+                    time = float(line.split(' ')[2])
+        self.log(msg)
+        return time
+
 
     def dump(self):
         with open(self._path('results.pickle'), 'wb') as f:

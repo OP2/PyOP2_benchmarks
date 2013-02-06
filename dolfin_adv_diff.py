@@ -75,7 +75,8 @@ def run(meshsize):
 
     t1 = time()
     simulation(diffusivity, current_time, dt, endtime, mesh, val)
-    print "/fluidity :: %f" % (time()-t1)
+    if MPI.process_number() == 0:
+        print "/fluidity :: %f" % (time()-t1)
 
 if __name__ == '__main__':
     run(int(sys.argv[1]))

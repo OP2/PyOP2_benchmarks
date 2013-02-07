@@ -45,20 +45,22 @@ class PyOP2Benchmark(Benchmark):
     def logged_call(self, call):
         self.log(subprocess.check_output(call, stderr=subprocess.STDOUT, shell=True))
 
-    def logged_call_with_time(self, call):
+    def logged_call_with_time(self, call, env=None):
+        if env is None: 
+            env=os.environ
         msg = subprocess.check_output(call, stderr=subprocess.STDOUT, shell=True)
+        self.log(msg)
         for line in msg.split('\n'):
             if line.find('/fluidity ::') != -1:
                     time = float(line.split(' ')[2])
-        self.log(msg)
         return time
     
     def flufl_call_with_time(self, call):
         msg = subprocess.check_output(call, stderr=subprocess.STDOUT, shell=True)
+        self.log(msg)
         for line in msg.split('\n'):
             if line.find('UFL ::') != -1:
                     time = float(line.split(' ')[2])
-        self.log(msg)
         return time
 
 

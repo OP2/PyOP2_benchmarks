@@ -47,8 +47,12 @@ def simulation(D, t, dt, endtime, mesh, initial):
 
     M_a, b_a, M_d, b_d = None, None, None, None
     # Time-stepping
+    first = True
     while t < endtime:
 
+        if first:
+            t1 = time()
+            first = False
         # Copy soln from prev.
         u0.assign(u1)
 
@@ -67,16 +71,16 @@ def simulation(D, t, dt, endtime, mesh, initial):
 
         # Next timestep
         t += dt
+    
+    if MPI.process_number() == 0:
+        print "/fluidity :: %f" % (time()-t1)
 
 def run(meshsize):
     from parameters import diffusivity, current_time, dt, endtime
     mesh = UnitSquare(meshsize, meshsize)
     mesh.init()
 
-    t1 = time()
     simulation(diffusivity, current_time, dt, endtime, mesh, val)
-    if MPI.process_number() == 0:
-        print "/fluidity :: %f" % (time()-t1)
 
 if __name__ == '__main__':
     run(int(sys.argv[1]))

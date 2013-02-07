@@ -18,7 +18,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%d.flml' % meshsize)
 
     def fluidity_mpi(self, meshsize):
-        return self.logged_call_with_time(self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%d.flml' % meshsize)
+        return self.logged_call_with_time('OMP_NUM_THREADS=1 '+self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%d.flml' % meshsize)
 
     def fluidity_pyop2_seq(self, meshsize):
         return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%d.flml' % meshsize)

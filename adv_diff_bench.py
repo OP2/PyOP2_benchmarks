@@ -6,43 +6,45 @@ import pylab
 from benchrun import clock
 from pyop2_bench import PyOP2Benchmark
 from generate_mesh import generate_meshfile
+from generate_triangle import generate_trianglefile
 import parameters
 
 class AdvDiffBenchmark(PyOP2Benchmark):
     """PyOP2 vs. Fluidity vs. DOLFIN benchmark."""
 
     def dolfin(self, meshsize):
-        return self.logged_call_with_time(self.mpicmd+"python dolfin_adv_diff.py %d" % meshsize)
+        return self.logged_call_with_time(self.mpicmd+"python dolfin_adv_diff.py %s" % meshsize)
 
     def fluidity(self, meshsize):
-        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%d.flml' % meshsize)
+        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%s.flml' % meshsize)
 
     def fluidity_mpi(self, meshsize):
-        return self.logged_call_with_time('OMP_NUM_THREADS=1 '+self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%d.flml' % meshsize)
+        return self.logged_call_with_time('OMP_NUM_THREADS=1 '+self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%s.flml' % meshsize)
 
     def fluidity_pyop2_seq(self, meshsize):
-        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%d.flml' % meshsize)
+        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize)
 
     def fluidity_pyop2_openmp(self, meshsize):
-        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.openmp.%d.flml' % meshsize)
+        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.openmp.%s.flml' % meshsize)
 
     def fluidity_pyop2_cuda(self, meshsize):
-        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.cuda.%d.flml' % meshsize)
+        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.cuda.%s.flml' % meshsize)
 
     def pyop2_seq(self, meshsize):
-        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/mesh_%d -b sequential' % meshsize)
+        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/square.%s -b sequential' % meshsize)
 
     def pyop2_openmp(self, meshsize):
-        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/mesh_%d -b openmp' % meshsize)
+        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/square.%s -b openmp' % meshsize)
 
     def pyop2_cuda(self, meshsize):
-        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/mesh_%d -b cuda' % meshsize)
+        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/square.%s -b cuda' % meshsize)
 
     def __init__(self, np=1, message='', version=None, reference=None, meshsize=None, parameters=None):
         # Execute for all combinations of these parameters
         #self.meshsize = meshsize or [101, 142, 174, 201, 225, 246, 266, 284, 301, 317, 333, 347, 362, 375, 388]
         #self.meshsize = meshsize or [101, 174, 225, 266, 301, 333, 362, 388]
-        self.meshsize = [317, 448, 549, 633]#, 708]
+        #self.meshsize = [317, 448, 549, 633]#, 708]
+        self.meshsize = ['0.000008', '0.000004', '0.000002']
         #[int(10 * sqrt(2)**i) for i in range(11)]
         parameters = parameters or ['version', 'meshsize']
         self.version = version or ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']
@@ -77,17 +79,18 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         if not os.path.exists('flmls'):
             os.makedirs('flmls')
         for s in self.meshsize:
-            mesh = os.path.join('meshes','mesh_%d' % s)
+            mesh = os.path.join('meshes','square.%s' % s)
             # Generate triangle mesh
-            self.log(generate_meshfile(mesh, s, capture=True))
+            #self.log(generate_meshfile(mesh, s, capture=True))
+            self.log(generate_trianglefile(s, capture=True))
             # Decompose the mesh if running in parallel
             if self.np > 1:
-                self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %d %s' \
+                self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %s %s' \
                         % (self.np, mesh))
             # Generate flml
             for backend in ['sequential', 'openmp', 'cuda']:
                 with open('ufl_advection_diffusion.flml.template') as f1, \
-                        open(os.path.join('flmls','ufl_advection_diffusion.%s.%d.flml'%(backend,s)), 'w') as f2:
+                        open(os.path.join('flmls','ufl_advection_diffusion.%s.%s.flml'%(backend,s)), 'w') as f2:
                     f2.write(f1.read() % {
                         'mesh': mesh,
                         'diffusivity': parameters.diffusivity,
@@ -97,7 +100,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                         'backend': backend
                         })
             with open('advection_diffusion.flml.template') as f1, \
-                        open(os.path.join('flmls','advection_diffusion.%d.flml'%s), 'w') as f2:
+                        open(os.path.join('flmls','advection_diffusion.%s.flml'%s), 'w') as f2:
                     f2.write(f1.read() % {
                         'mesh': mesh,
                         'diffusivity': parameters.diffusivity,
@@ -110,15 +113,15 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
     def dry_run(self, version, meshsize):
         if version not in self.primed:
-            self.log("Performing dry run of %s using mesh size %dx%d" % (version, meshsize, meshsize))
+            self.log("Performing dry run of %s using mesh size %sx%s" % (version, meshsize, meshsize))
             self.__getattribute__(version)(meshsize)
             self.primed.append(version)
 
     def run(self, version, meshsize):
         self.dry_run(version, meshsize)
-        self.log("Running %s with mesh size %dx%d" % (version, meshsize, meshsize))
+        self.log("Running %s with mesh size %s" % (version, meshsize))
         t = self.__getattribute__(version)(meshsize)
-        elems = 2*meshsize*meshsize
+        elems = meshsize
         if not elems in self.plotdata['elements']:
             self.plotdata['elements'].append(elems)
         self.plotdata[version].append(t)

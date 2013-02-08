@@ -77,10 +77,10 @@ def simulation(D, t, dt, endtime, mesh, initial):
 
 def run(meshsize):
     from parameters import diffusivity, current_time, dt, endtime
-    mesh = UnitSquare(meshsize, meshsize)
+    mesh = Mesh('meshes/square.%s.xml' % meshsize)
     mesh.init()
 
     simulation(diffusivity, current_time, dt, endtime, mesh, val)
 
 if __name__ == '__main__':
-    run(int(sys.argv[1]))
+    run(sys.argv[1])

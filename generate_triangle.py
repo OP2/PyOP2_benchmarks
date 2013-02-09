@@ -11,14 +11,22 @@ def runcmd(cmd, capture):
         return subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
     return subprocess.call(cmd, shell=True)
 
-def generate_trianglefile(size, capture=False):
+def generate_trianglefile(size, capture=False, reorder=True):
     generate = runcmd("triangle -e -a"+size+" square.poly", capture)
-    movele = runcmd("mv square.1.ele meshes/square."+size+".ele", capture)
-    movedge = runcmd("mv square.1.edge meshes/square."+size+".edge", capture)
-    movnode = runcmd("mv square.1.node meshes/square."+size+".node", capture)
-    movpoly = runcmd("mv square.1.poly meshes/square."+size+".poly", capture)
+    if reorder:
+        fluidity = runcmd("${HILBERT_DIR}/bin/fluidity reorder_mesh.flml", capture)
+        generate = "%s\n%s" % (generate, fluidity)
+        movele = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.ele meshes/square."+size+".ele", capture)
+        movedge = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.edge meshes/square."+size+".edge", capture)
+        movnode = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.node meshes/square."+size+".node", capture)
+        #movpoly = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.poly meshes/square."+size+".poly", capture)
+    else:
+        movele = runcmd("mv square.1.ele meshes/square."+size+".ele", capture)
+        movedge = runcmd("mv square.1.edge meshes/square."+size+".edge", capture)
+        movnode = runcmd("mv square.1.node meshes/square."+size+".node", capture)
+        #movpoly = runcmd("mv square.1.poly meshes/square."+size+".poly", capture)
     if capture:
-        return "%s\n%s\n%s\n%s\n%s\n" % (generate, movele, movedge, movnode, movpoly)
+        return "%s\n%s\n%s\n%s\n" % (generate, movele, movedge, movnode)
 
 #####################################################################
 # Script starts here.

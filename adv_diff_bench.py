@@ -84,9 +84,10 @@ class AdvDiffBenchmark(PyOP2Benchmark):
             #self.log(generate_meshfile(mesh, s, capture=True))
             self.log(generate_trianglefile(s, capture=True))
             # Decompose the mesh if running in parallel
-            if self.np > 1:
-                self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %s %s' \
-                        % (self.np, mesh))
+            print "Warning: not decomposing mesh."
+            #if self.np > 1:
+            #    self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %s %s' \
+            #            % (self.np, mesh))
             # Generate flml
             for backend in ['sequential', 'openmp', 'cuda']:
                 with open('ufl_advection_diffusion.flml.template') as f1, \

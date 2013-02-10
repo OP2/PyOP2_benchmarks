@@ -44,7 +44,11 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         #self.meshsize = meshsize or [101, 142, 174, 201, 225, 246, 266, 284, 301, 317, 333, 347, 362, 375, 388]
         #self.meshsize = meshsize or [101, 174, 225, 266, 301, 333, 362, 388]
         #self.meshsize = [317, 448, 549, 633]#, 708]
-        self.meshsize = ['0.000008', '0.000004', '0.000002']
+        #self.meshsize = ['0.000008', '0.000004', '0.0000026', '0.000002']
+        self.meshsize = ['0.0000077170', '0.0000061736', '0.0000051447', '0.0000044097', \
+                         '0.0000038585', '0.0000034298', '0.0000030868', '0.0000028062', \
+                         '0.0000025723', '0.0000023745', '0.0000022049', '0.0000020579', \
+                         '0.0000019293']
         #[int(10 * sqrt(2)**i) for i in range(11)]
         parameters = parameters or ['version', 'meshsize']
         self.version = version or ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']

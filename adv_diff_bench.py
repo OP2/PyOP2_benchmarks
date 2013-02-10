@@ -1,3 +1,4 @@
+from glob import glob
 from math import sqrt
 import logging
 import os
@@ -81,7 +82,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                 'dolfin': 'DOLFIN (cores: %d)' % self.np
                 }
 
-    def create_input(self):
+    def create_input(self, reorder):
         if not os.path.exists('meshes'):
             os.makedirs('meshes')
         if not os.path.exists('flmls'):
@@ -90,12 +91,20 @@ class AdvDiffBenchmark(PyOP2Benchmark):
             mesh = os.path.join('meshes','square.%s' % s)
             # Generate triangle mesh
             #self.log(generate_meshfile(mesh, s, capture=True))
-            self.log(generate_trianglefile(s, capture=True))
+            self.log(generate_trianglefile(s, capture=True, reorder=reorder, move=self.np==1))
             # Decompose the mesh if running in parallel
-            print "Warning: not decomposing mesh."
-            #if self.np > 1:
-            #    self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %s %s' \
-            #            % (self.np, mesh))
+            if self.np > 1:
+                if reorder:
+                    cmd = '${HILBERT_DIR}/bin/flredecomp -i 1 -o %d reorder_mesh_0_checkpoint decomp'
+                    self.logged_call(self.mpicmd+cmd % self.np)
+                    for m in glob('decomp_CoordinateMesh_*'):
+                        self.logged_call('mv %s %s%s' % (m, mesh, m[21:]))
+                    self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.ele %s.ele" % mesh)
+                    self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.edge %s.edge" % mesh)
+                    self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.node %s.node" % mesh)
+                else:
+                    self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %s %s' \
+                            % (self.np, mesh))
             # Generate flml
             for backend in ['sequential', 'openmp', 'cuda']:
                 with open('ufl_advection_diffusion.flml.template') as f1, \
@@ -118,7 +127,6 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                         'endtime': (parameters.endtime - parameters.dt),
                         'backend': backend
                         })
-
 
     def dry_run(self, version, meshsize):
         if version not in self.primed:
@@ -172,6 +180,8 @@ if __name__ == '__main__':
     parser.add_argument('-q', '--quiet', help='Only print errors and warnings')
     parser.add_argument('-s', '--create-input', action='store_true',
             help='Do not generate input files')
+    parser.add_argument('--reorder', action='store_true', default=True,
+            help='Reorder mesh (only when called with --create-input)')
     parser.add_argument('-n', '-np', type=int, default=1,
             help='Number of MPI process (Fluidity, DOLFIN)')
     parser.add_argument('-m', '--message', default='',
@@ -183,7 +193,7 @@ if __name__ == '__main__':
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.create_input:
-        b.create_input()
+        b.create_input(args.reorder)
     if args.run:
         b.time_all()
         b.sort_results()

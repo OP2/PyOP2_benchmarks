@@ -82,16 +82,20 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                 'dolfin': 'DOLFIN (cores: %d)' % self.np
                 }
 
-    def create_input(self, reorder):
+    def create_input(self, extrude, reorder):
         if not os.path.exists('meshes'):
             os.makedirs('meshes')
         if not os.path.exists('flmls'):
             os.makedirs('flmls')
         for s in self.meshsize:
-            mesh = os.path.join('meshes','square.%s' % s)
-            # Generate triangle mesh
-            #self.log(generate_meshfile(mesh, s, capture=True))
-            self.log(generate_trianglefile(s, capture=True, reorder=reorder, move=self.np==1))
+            if extrude:
+                # Generate extruded mesh
+                mesh = os.path.join('meshes','mesh.%s' % s)
+                self.log(generate_meshfile(mesh, s, capture=True))
+            else:
+                # Generate triangle mesh
+                mesh = os.path.join('meshes','square.%s' % s)
+                self.log(generate_trianglefile(s, capture=True, reorder=reorder, move=self.np==1))
             # Decompose the mesh if running in parallel
             if self.np > 1:
                 if reorder:
@@ -178,6 +182,8 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--reference', help='Version to use as reference')
     parser.add_argument('-l', '--load', help='Pickle load from file')
     parser.add_argument('-q', '--quiet', help='Only print errors and warnings')
+    parser.add_argument('-e', '--extrude', action='store_true',
+            help='Use extruded structured unit square mesh')
     parser.add_argument('-s', '--create-input', action='store_true',
             help='Do not generate input files')
     parser.add_argument('--reorder', action='store_true', default=True,
@@ -193,7 +199,7 @@ if __name__ == '__main__':
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.create_input:
-        b.create_input(args.reorder)
+        b.create_input(args.extrude, args.reorder)
     if args.run:
         b.time_all()
         b.sort_results()

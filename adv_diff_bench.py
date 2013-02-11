@@ -15,37 +15,38 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
     def dolfin(self, meshsize):
         """DOLFIN advection-diffusion benchmark (MPI parallel)"""
-        cmd = self.mpicmd+"python dolfin_adv_diff.py %s" % meshsize
+        cmd = [self.mpicmd, "python dolfin_adv_diff.py %s" % meshsize]
         return self.logged_call_with_time(cmd)
 
     def fluidity(self, meshsize):
         """Fluidity advection-diffusion benchmark (sequential)"""
-        cmd = '${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%s.flml' % meshsize
+        cmd = [self.flcmd, '-p flmls/advection_diffusion.%s.flml' % meshsize]
         return self.logged_call_with_time(cmd)
 
     def fluidity_mpi(self, meshsize):
         """Fluidity advection-diffusion benchmark (MPI parallel)"""
-        cmd = 'OMP_NUM_THREADS=1 '+self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%s.flml' % meshsize
+        cmd = ['OMP_NUM_THREADS=1', self.mpicmd, self.flcmd,
+               '-p flmls/advection_diffusion.%s.flml' % meshsize]
         return self.logged_call_with_time(cmd)
 
     def fluidity_pyop2_seq(self, meshsize):
         """Fluidity-PyOP2 advection-diffusion benchmark (sequential backend)"""
-        cmd = '${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize
+        cmd = [self.flcmd, '-p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize]
         return self.flufl_call_with_time(cmd)
 
     def fluidity_pyop2_openmp(self, meshsize):
         """Fluidity-PyOP2 advection-diffusion benchmark (OpenMP backend)"""
-        cmd = '${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.openmp.%s.flml' % meshsize
+        cmd = [self.flcmd, '-p flmls/ufl_advection_diffusion.openmp.%s.flml' % meshsize]
         return self.flufl_call_with_time(cmd)
 
     def fluidity_pyop2_cuda(self, meshsize):
         """Fluidity-PyOP2 advection-diffusion benchmark (CUDA backend)"""
-        cmd = '${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.cuda.%s.flml' % meshsize
+        cmd = [self.flcmd, '-p flmls/ufl_advection_diffusion.cuda.%s.flml' % meshsize]
         return self.flufl_call_with_time(cmd)
 
     def fluidity_pyop2_mpi(self, meshsize):
         """Fluidity-PyOP2 advection-diffusion benchmark (MPI parallel)"""
-        cmd = self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize
+        cmd = [self.mpicmd, self.flcmd, '-p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize]
         return self.logged_call_with_time(cmd)
 
     def pyop2_seq(self, meshsize):
@@ -63,7 +64,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         cmd = 'python pyop2_adv_diff.py -m meshes/square.%s -b cuda' % meshsize
         return self.logged_call_with_time(cmd)
 
-    def __init__(self, np=1, message='', version=None, reference=None, meshsize=None, parameters=None):
+    def __init__(self, np=1, message='', version=None, reference=None,
+            meshsize=None, parameters=None, mpicmd=None, flcmd=None):
         parameters = parameters or ['version', 'meshsize']
         # Execute for all combinations of these parameters
         self.meshsize = meshsize or ['0.000008', '0.000004', '0.000002']
@@ -78,7 +80,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
         self.np=np
         self.message=message
-        self.mpicmd = 'mpiexec ' if np>1 else ''
+        self.mpicmd = mpicmd or 'mpiexec' if np>1 else ''
+        self.flcmd = flcmd or '${FLUIDITY_DIR}/bin/fluidity'
 
         self.plotstyle = dict(zip(self.version, ['k-o', 'g-s', 'r-d', 'b-^']))
         self.plotlabels = {
@@ -112,7 +115,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
             if self.np > 1:
                 if reorder:
                     cmd = '${HILBERT_DIR}/bin/flredecomp -i 1 -o %d reorder_mesh_0_checkpoint decomp'
-                    self.logged_call(self.mpicmd+cmd % self.np)
+                    self.logged_call([self.mpicmd, cmd % self.np])
                     for m in glob('decomp_CoordinateMesh_*'):
                         self.logged_call('mv %s %s%s' % (m, mesh, m[21:]))
                     self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.ele %s.ele" % mesh)
@@ -204,10 +207,13 @@ if __name__ == '__main__':
             help='Number of MPI process (Fluidity, DOLFIN)')
     parser.add_argument('-m', '--message', default='',
             help='Message, added to the log output')
+    parser.add_argument('--mpi-cmd', help='Command to run MPI processes')
+    parser.add_argument('--fluidity-cmd', help='Fluidity binary to run')
     args = parser.parse_args()
 
     logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
-    b = AdvDiffBenchmark(args.n, args.message, args.versions, args.reference)
+    b = AdvDiffBenchmark(args.n, args.message, args.versions, args.reference,
+            mpicmd=args.mpi_cmd, flcmd=args.fluidity_cmd)
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.create_input:

@@ -14,52 +14,64 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     """PyOP2 vs. Fluidity vs. DOLFIN benchmark."""
 
     def dolfin(self, meshsize):
-        return self.logged_call_with_time(self.mpicmd+"python dolfin_adv_diff.py %s" % meshsize)
+        """DOLFIN advection-diffusion benchmark (MPI parallel)"""
+        cmd = self.mpicmd+"python dolfin_adv_diff.py %s" % meshsize
+        return self.logged_call_with_time(cmd)
 
     def fluidity(self, meshsize):
-        return self.logged_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%s.flml' % meshsize)
+        """Fluidity advection-diffusion benchmark (sequential)"""
+        cmd = '${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%s.flml' % meshsize
+        return self.logged_call_with_time(cmd)
 
     def fluidity_mpi(self, meshsize):
-        return self.logged_call_with_time('OMP_NUM_THREADS=1 '+self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%s.flml' % meshsize)
+        """Fluidity advection-diffusion benchmark (MPI parallel)"""
+        cmd = 'OMP_NUM_THREADS=1 '+self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/advection_diffusion.%s.flml' % meshsize
+        return self.logged_call_with_time(cmd)
 
     def fluidity_pyop2_seq(self, meshsize):
-        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize)
+        """Fluidity-PyOP2 advection-diffusion benchmark (sequential backend)"""
+        cmd = '${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize
+        return self.flufl_call_with_time(cmd)
 
     def fluidity_pyop2_openmp(self, meshsize):
-        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.openmp.%s.flml' % meshsize)
+        """Fluidity-PyOP2 advection-diffusion benchmark (OpenMP backend)"""
+        cmd = '${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.openmp.%s.flml' % meshsize
+        return self.flufl_call_with_time(cmd)
 
     def fluidity_pyop2_cuda(self, meshsize):
-        return self.flufl_call_with_time('${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.cuda.%s.flml' % meshsize)
+        """Fluidity-PyOP2 advection-diffusion benchmark (CUDA backend)"""
+        cmd = '${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.cuda.%s.flml' % meshsize
+        return self.flufl_call_with_time(cmd)
 
     def fluidity_pyop2_mpi(self, meshsize):
-        return self.logged_call_with_time(self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize)
+        """Fluidity-PyOP2 advection-diffusion benchmark (MPI parallel)"""
+        cmd = self.mpicmd+'${FLUIDITY_DIR}/bin/fluidity -p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize
+        return self.logged_call_with_time(cmd)
 
     def pyop2_seq(self, meshsize):
-        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/square.%s -b sequential' % meshsize)
+        """PyOP2 advection-diffusion benchmark (sequential backend)"""
+        cmd = 'python pyop2_adv_diff.py -m meshes/square.%s -b sequential' % meshsize
+        return self.logged_call_with_time(cmd)
 
     def pyop2_openmp(self, meshsize):
-        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/square.%s -b openmp' % meshsize)
+        """PyOP2 advection-diffusion benchmark (OpenMP backend)"""
+        cmd = 'python pyop2_adv_diff.py -m meshes/square.%s -b openmp' % meshsize
+        return self.logged_call_with_time(cmd)
 
     def pyop2_cuda(self, meshsize):
-        return self.logged_call_with_time('python pyop2_adv_diff.py -m meshes/square.%s -b cuda' % meshsize)
+        """PyOP2 advection-diffusion benchmark (CUDA backend)"""
+        cmd = 'python pyop2_adv_diff.py -m meshes/square.%s -b cuda' % meshsize
+        return self.logged_call_with_time(cmd)
 
     def __init__(self, np=1, message='', version=None, reference=None, meshsize=None, parameters=None):
-        # Execute for all combinations of these parameters
-        #self.meshsize = meshsize or [101, 142, 174, 201, 225, 246, 266, 284, 301, 317, 333, 347, 362, 375, 388]
-        #self.meshsize = meshsize or [101, 174, 225, 266, 301, 333, 362, 388]
-        #self.meshsize = [317, 448, 549, 633]#, 708]
-        #self.meshsize = ['0.000008', '0.000004', '0.0000026', '0.000002']
-        self.meshsize = ['0.0000077170', '0.0000061736', '0.0000051447', '0.0000044097', \
-                         '0.0000038585', '0.0000034298', '0.0000030868', '0.0000028062', \
-                         '0.0000025723', '0.0000023745', '0.0000022049', '0.0000020579', \
-                         '0.0000019293']
-        #[int(10 * sqrt(2)**i) for i in range(11)]
         parameters = parameters or ['version', 'meshsize']
+        # Execute for all combinations of these parameters
+        self.meshsize = meshsize or ['0.000008', '0.000004', '0.000002']
         self.version = version or ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']
-        self.primed = []
         # Compare timings against this parameter value
         self.reference = ('version', reference or 'fluidity')
         super(AdvDiffBenchmark, self).__init__(parameters)
+        self.primed = []
 
         self.log("Running versions: %s" % self.version)
         self.log("Reference %s: %s" % self.reference)

@@ -56,21 +56,21 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
     def pyop2_seq(self, meshsize):
         """PyOP2 advection-diffusion benchmark (sequential backend)"""
-        cmd = 'python pyop2_adv_diff.py -m meshes/square.%s -b sequential' % meshsize
+        cmd = 'python pyop2_adv_diff.py -m %s -b sequential' % (self.mesh % meshsize)
         return self.logged_call_with_time(cmd)
 
     def pyop2_openmp(self, meshsize):
         """PyOP2 advection-diffusion benchmark (OpenMP backend)"""
-        cmd = 'python pyop2_adv_diff.py -m meshes/square.%s -b openmp' % meshsize
+        cmd = 'python pyop2_adv_diff.py -m %s -b openmp' % (self.mesh % meshsize)
         return self.logged_call_with_time(cmd)
 
     def pyop2_cuda(self, meshsize):
         """PyOP2 advection-diffusion benchmark (CUDA backend)"""
-        cmd = 'python pyop2_adv_diff.py -m meshes/square.%s -b cuda' % meshsize
+        cmd = 'python pyop2_adv_diff.py -m %s -b cuda' % (self.mesh % meshsize)
         return self.logged_call_with_time(cmd)
 
     def __init__(self, np=1, message='', version=None, reference=None,
-            meshsize=None, parameters=None, mpicmd=None, flcmd=None):
+            extrude=False, meshsize=None, parameters=None, mpicmd=None, flcmd=None):
         parameters = parameters or ['version', 'meshsize']
         # Execute for all combinations of these parameters
         self.meshsize = meshsize or ['0.000008', '0.000004', '0.000002']
@@ -87,6 +87,13 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.message=message
         self.mpicmd = mpicmd or 'mpiexec' if np>1 else ''
         self.flcmd = flcmd or '${FLUIDITY_DIR}/bin/fluidity'
+        self.meshdir = os.path.join('meshes', str(self.np)) if self.np > 1 else 'meshes'
+        if extrude:
+            self.mesh = os.path.join(self.meshdir,'mesh.%s')
+            self.generate_mesh = generate_meshfile
+        else:
+            self.mesh = os.path.join(self.meshdir,'square.%s')
+            self.generate_mesh = generate_trianglefile
 
         self.plotstyle = dict(zip(self.version, ['k-o', 'g-s', 'r-d', 'b-^']))
         self.plotlabels = {
@@ -103,20 +110,16 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                 'dolfin': 'DOLFIN (cores: %d)' % self.np
                 }
 
-    def create_input(self, extrude, reorder):
-        if not os.path.exists('meshes'):
-            os.makedirs('meshes')
+    def create_input(self, reorder):
+        if not os.path.exists(self.meshdir):
+            os.makedirs(self.meshdir)
         if not os.path.exists('flmls'):
             os.makedirs('flmls')
         for s in self.meshsize:
-            if extrude:
-                # Generate extruded mesh
-                mesh = os.path.join('meshes','mesh.%s' % s)
-                self.log(generate_meshfile(mesh, s, capture=True))
-            else:
-                # Generate triangle mesh
-                mesh = os.path.join('meshes','square.%s' % s)
-                self.log(generate_trianglefile(s, capture=True, reorder=reorder, move=self.np==1))
+            mesh = self.mesh % s
+            # Generate mesh
+            self.log("Generating mesh %s" % mesh)
+            self.log(self.generate_mesh(mesh, s, capture=True, reorder=reorder, move=self.np==1))
             # Decompose the mesh if running in parallel
             if self.np > 1:
                 if reorder:
@@ -219,11 +222,11 @@ if __name__ == '__main__':
 
     logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
     b = AdvDiffBenchmark(args.n, args.message, args.versions, args.reference,
-            mpicmd=args.mpi_cmd, flcmd=args.fluidity_cmd)
+            args.extrude, mpicmd=args.mpi_cmd, flcmd=args.fluidity_cmd)
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.create_input:
-        b.create_input(args.extrude, args.reorder)
+        b.create_input(args.reorder)
     if args.run:
         b.time_all()
         b.sort_results()

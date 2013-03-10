@@ -49,6 +49,11 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         cmd = [self.mpicmd, self.flcmd, '-p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize]
         return self.logged_call_with_time(cmd)
 
+    def fluidity_pyop2_mpi_openmp(self, meshsize):
+        """Fluidity-PyOP2 advection-diffusion benchmark (MPI + OpenMP parallel)"""
+        cmd = [self.mpicmd, self.flcmd, '-p flmls/ufl_advection_diffusion.openmp.%s.flml' % meshsize]
+        return self.logged_call_with_time(cmd)
+
     def pyop2_seq(self, meshsize):
         """PyOP2 advection-diffusion benchmark (sequential backend)"""
         cmd = 'python pyop2_adv_diff.py -m meshes/square.%s -b sequential' % meshsize
@@ -91,6 +96,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                 'fluidity_pyop2_cuda': 'Fluidity-PyOP2 (backend: cuda)',
                 'fluidity_pyop2_openmp': 'Fluidity-PyOP2 (backend: openmp)',
                 'fluidity_pyop2_mpi': 'Fluidity-PyOP2 (backend: mpi)',
+                'fluidity_pyop2_mpi_openmp': 'Fluidity-PyOP2 (backend: mpi+openmp)',
                 'pyop2_seq': 'PyOP2 (backend: sequential)',
                 'pyop2_openmp': 'PyOP2 (backend: OpenMP)',
                 'pyop2_cuda': 'PyOP2 (backend: CUDA)',

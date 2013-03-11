@@ -25,52 +25,61 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
     def fluidity_mpi(self, meshsize):
         """Fluidity advection-diffusion benchmark (MPI parallel)"""
-        cmd = ['OMP_NUM_THREADS=1', self.mpicmd, self.flcmd,
-               '-p flmls/advection_diffusion.%s.flml' % meshsize]
+        cmd = [self.mpicmd, self.flcmd, '-p flmls/advection_diffusion.%s.flml' % meshsize]
         return self.logged_call_with_time(cmd)
+
+    def _fluidity_pyop2_call(self, backend, meshsize, mpi=''):
+        cmd = [mpi, self.flcmd, '-p flmls/ufl_advection_diffusion%s.%s.%s.flml' % (self.profile, backend, meshsize)]
+        time = self.flufl_call_with_time(cmd)
+        if self.profile:
+            pattern = 'ufl_advection_diffusion.%s.*.%%d.cprofile.part' % backend
+            outfile = self._path('ufl_advection_diffusion.%s.%%d.cprofile' % backend)
+            self.logged_call([mpi, 'python concat.py', "'"+pattern+"'", outfile, 'mpi'])
+        return time
 
     def fluidity_pyop2_seq(self, meshsize):
         """Fluidity-PyOP2 advection-diffusion benchmark (sequential backend)"""
-        cmd = [self.flcmd, '-p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize]
-        return self.flufl_call_with_time(cmd)
+        return self._fluidity_pyop2_call('sequential', meshsize)
 
     def fluidity_pyop2_openmp(self, meshsize):
         """Fluidity-PyOP2 advection-diffusion benchmark (OpenMP backend)"""
-        cmd = [self.flcmd, '-p flmls/ufl_advection_diffusion.openmp.%s.flml' % meshsize]
-        return self.flufl_call_with_time(cmd)
+        return self._fluidity_pyop2_call('openmp', meshsize)
 
     def fluidity_pyop2_cuda(self, meshsize):
         """Fluidity-PyOP2 advection-diffusion benchmark (CUDA backend)"""
-        cmd = [self.flcmd, '-p flmls/ufl_advection_diffusion.cuda.%s.flml' % meshsize]
-        return self.flufl_call_with_time(cmd)
+        return self._fluidity_pyop2_call('cuda', meshsize)
 
     def fluidity_pyop2_mpi(self, meshsize):
         """Fluidity-PyOP2 advection-diffusion benchmark (MPI parallel)"""
-        cmd = [self.mpicmd, self.flcmd, '-p flmls/ufl_advection_diffusion.sequential.%s.flml' % meshsize]
-        return self.logged_call_with_time(cmd)
+        return self._fluidity_pyop2_call('sequential', meshsize, self.mpicmd)
 
     def fluidity_pyop2_mpi_openmp(self, meshsize):
         """Fluidity-PyOP2 advection-diffusion benchmark (MPI + OpenMP parallel)"""
-        cmd = [self.mpicmd, self.flcmd, '-p flmls/ufl_advection_diffusion.openmp.%s.flml' % meshsize]
+        return self._fluidity_pyop2_call('openmp', meshsize, self.mpicmd)
+
+    def _pyop2_call(self, backend, meshsize):
+        if self.profile:
+            prof = '-m cProfile -o %s ' % self._path('pyop2_adv_diff.%s.cprofile' % backend)
+        else:
+            prof = ''
+        cmd = 'python %spyop2_adv_diff.py -m %s -b %s' % (prof, self.mesh % meshsize, backend)
         return self.logged_call_with_time(cmd)
 
     def pyop2_seq(self, meshsize):
         """PyOP2 advection-diffusion benchmark (sequential backend)"""
-        cmd = 'python pyop2_adv_diff.py -m %s -b sequential' % (self.mesh % meshsize)
-        return self.logged_call_with_time(cmd)
+        return self._pyop2_call('sequential', meshsize)
 
     def pyop2_openmp(self, meshsize):
         """PyOP2 advection-diffusion benchmark (OpenMP backend)"""
-        cmd = 'python pyop2_adv_diff.py -m %s -b openmp' % (self.mesh % meshsize)
-        return self.logged_call_with_time(cmd)
+        return self._pyop2_call('openmp', meshsize)
 
     def pyop2_cuda(self, meshsize):
         """PyOP2 advection-diffusion benchmark (CUDA backend)"""
-        cmd = 'python pyop2_adv_diff.py -m %s -b cuda' % (self.mesh % meshsize)
-        return self.logged_call_with_time(cmd)
+        return self._pyop2_call('cuda', meshsize)
 
     def __init__(self, np=1, message='', version=None, reference=None,
-            extrude=False, meshsize=None, parameters=None, mpicmd=None, flcmd=None):
+            extrude=False, meshsize=None, parameters=None, mpicmd=None,
+            flcmd=None, profile=None):
         parameters = parameters or ['version', 'meshsize']
         # Execute for all combinations of these parameters
         self.meshsize = meshsize or ['0.000008', '0.000004', '0.000002']
@@ -87,6 +96,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.message=message
         self.mpicmd = mpicmd or 'mpiexec' if np>1 else ''
         self.flcmd = flcmd or '${FLUIDITY_DIR}/bin/fluidity'
+        self.profile = '.profile' if profile else ''
         self.meshdir = os.path.join('meshes', str(self.np)) if self.np > 1 else 'meshes'
         if extrude:
             self.mesh = os.path.join(self.meshdir,'mesh.%s')
@@ -133,28 +143,23 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                 else:
                     self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %s %s' \
                             % (self.np, mesh))
+            def write_flml(f1, f2):
+                f2.write(f1.read() % {
+                    'mesh': mesh,
+                    'diffusivity': parameters.diffusivity,
+                    'current_time': parameters.current_time,
+                    'dt': parameters.dt,
+                    'endtime': (parameters.endtime - parameters.dt),
+                    'backend': backend
+                    })
             # Generate flml
             for backend in ['sequential', 'openmp', 'cuda']:
-                with open('ufl_advection_diffusion.flml.template') as f1, \
-                        open(os.path.join('flmls','ufl_advection_diffusion.%s.%s.flml'%(backend,s)), 'w') as f2:
-                    f2.write(f1.read() % {
-                        'mesh': mesh,
-                        'diffusivity': parameters.diffusivity,
-                        'current_time': parameters.current_time,
-                        'dt': parameters.dt,
-                        'endtime': (parameters.endtime - parameters.dt),
-                        'backend': backend
-                        })
+                with open('ufl_advection_diffusion%s.flml.template' % self.profile) as f1, \
+                        open(os.path.join('flmls','ufl_advection_diffusion%s.%s.%s.flml' % (self.profile, backend, s)), 'w') as f2:
+                    write_flml(f1, f2)
             with open('advection_diffusion.flml.template') as f1, \
-                        open(os.path.join('flmls','advection_diffusion.%s.flml'%s), 'w') as f2:
-                    f2.write(f1.read() % {
-                        'mesh': mesh,
-                        'diffusivity': parameters.diffusivity,
-                        'current_time': parameters.current_time,
-                        'dt': parameters.dt,
-                        'endtime': (parameters.endtime - parameters.dt),
-                        'backend': backend
-                        })
+                    open(os.path.join('flmls','advection_diffusion.%s.flml'%s), 'w') as f2:
+                write_flml(f1, f2)
 
     def dry_run(self, version, meshsize):
         if version not in self.primed:
@@ -218,11 +223,13 @@ if __name__ == '__main__':
             help='Message, added to the log output')
     parser.add_argument('--mpi-cmd', help='Command to run MPI processes')
     parser.add_argument('--fluidity-cmd', help='Fluidity binary to run')
+    parser.add_argument('--python-profile', action='store_true',
+            help='Create a cProfile of the Python runs')
     args = parser.parse_args()
 
     logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
     b = AdvDiffBenchmark(args.n, args.message, args.versions, args.reference,
-            args.extrude, mpicmd=args.mpi_cmd, flcmd=args.fluidity_cmd)
+            args.extrude, mpicmd=args.mpi_cmd, flcmd=args.fluidity_cmd, profile=args.python_profile)
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.create_input:

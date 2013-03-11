@@ -20,16 +20,18 @@ class AdvDiffBenchmark(PyOP2Benchmark):
 
     def fluidity(self, meshsize):
         """Fluidity advection-diffusion benchmark (sequential)"""
-        cmd = [self.flcmd, '-p flmls/advection_diffusion.%s.flml' % meshsize]
+        cmd = [self.flcmd, '-p %s/advection_diffusion.%s.flml' % (self.flmldir, meshsize)]
         return self.logged_call_with_time(cmd)
 
     def fluidity_mpi(self, meshsize):
         """Fluidity advection-diffusion benchmark (MPI parallel)"""
-        cmd = [self.mpicmd, self.flcmd, '-p flmls/advection_diffusion.%s.flml' % meshsize]
+        cmd = [self.mpicmd, self.flcmd, '-p %s/advection_diffusion.%s.flml'
+                % (self.flmldir, meshsize)]
         return self.logged_call_with_time(cmd)
 
     def _fluidity_pyop2_call(self, backend, meshsize, mpi=''):
-        cmd = [mpi, self.flcmd, '-p flmls/ufl_advection_diffusion%s.%s.%s.flml' % (self.profile, backend, meshsize)]
+        cmd = [mpi, self.flcmd, '-p %s/ufl_advection_diffusion%s.%s.%s.flml'
+                % (self.flmldir, self.profile, backend, meshsize)]
         time = self.flufl_call_with_time(cmd)
         if self.profile:
             pattern = 'ufl_advection_diffusion.%s.*.%%d.cprofile.part' % backend
@@ -98,6 +100,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.flcmd = flcmd or '${FLUIDITY_DIR}/bin/fluidity'
         self.profile = '.profile' if profile else ''
         self.meshdir = os.path.join('meshes', str(self.np)) if self.np > 1 else 'meshes'
+        self.flmldir = os.path.join('flmls', str(self.np)) if self.np > 1 else 'flmls'
         if extrude:
             self.mesh = os.path.join(self.meshdir,'mesh.%s')
             self.generate_mesh = generate_meshfile
@@ -123,8 +126,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     def create_input(self, reorder):
         if not os.path.exists(self.meshdir):
             os.makedirs(self.meshdir)
-        if not os.path.exists('flmls'):
-            os.makedirs('flmls')
+        if not os.path.exists(self.flmldir):
+            os.makedirs(self.flmldir)
         for s in self.meshsize:
             mesh = self.mesh % s
             # Generate mesh
@@ -155,10 +158,11 @@ class AdvDiffBenchmark(PyOP2Benchmark):
             # Generate flml
             for backend in ['sequential', 'openmp', 'cuda']:
                 with open('ufl_advection_diffusion%s.flml.template' % self.profile) as f1, \
-                        open(os.path.join('flmls','ufl_advection_diffusion%s.%s.%s.flml' % (self.profile, backend, s)), 'w') as f2:
+                        open(os.path.join(self.flmldir,'ufl_advection_diffusion%s.%s.%s.flml'
+                             % (self.profile, backend, s)), 'w') as f2:
                     write_flml(f1, f2)
             with open('advection_diffusion.flml.template') as f1, \
-                    open(os.path.join('flmls','advection_diffusion.%s.flml'%s), 'w') as f2:
+                    open(os.path.join(self.flmldir,'advection_diffusion.%s.flml'%s), 'w') as f2:
                 write_flml(f1, f2)
 
     def dry_run(self, version, meshsize):
@@ -197,7 +201,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         title = self.message or 'Benchmark of an advection-diffusion problem for 100 time steps'
         for fig, pl in zip(('linear', 'semilogx'), (pylab.plot, pylab.semilogx)):
             self._plot('runtime_'+fig, pl, lambda x: x, 'upper left', 'Overall runtime in seconds', title, format)
-            self._plot('speedup_'+fig, pl, lambda x: x+'_speedup', 'lower right', 'Relative speedup over Fluidity baseline', title, format)
+            self._plot('speedup_'+fig, pl, lambda x: x+'_speedup', 'lower right',
+                       'Relative speedup over Fluidity baseline', title, format)
 
 if __name__ == '__main__':
 

@@ -87,7 +87,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.meshsize = meshsize or ['0.000008', '0.000004', '0.000002']
         self.version = version or ['fluidity', 'fluidity_pyop2_seq', 'pyop2_seq']
         # Compare timings against this parameter value
-        self.reference = ('version', reference or 'fluidity')
+        self.reference = ('version', reference or self.version[0])
         super(AdvDiffBenchmark, self).__init__(parameters)
         self.primed = []
 

@@ -104,7 +104,7 @@ D=M-0.5*d
 diff_rhs=action(M+0.5*d,t)
 
 solve(M == adv_rhs, t)
-solve(D == diff_rhs, t)""", 'ufl_advection_diffusion.'+str(time)+'.'+str(rank)+'.cprofile.part')</string_value>
+solve(D == diff_rhs, t)""", 'ufl_advection_diffusion.%(backend)s.'+str(time)+'.'+str(rank)+'.cprofile.part')</string_value>
         </equation>
         <spatial_discretisation>
           <continuous_galerkin>

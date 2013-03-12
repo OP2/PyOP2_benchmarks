@@ -35,7 +35,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         time = self.flufl_call_with_time(cmd)
         if self.profile:
             pattern = 'ufl_advection_diffusion.%s.*.%%d.cprofile.part' % backend
-            outfile = self._path('ufl_advection_diffusion.%s.%%d.cprofile' % backend)
+            outfile = self._path('ufl_advection_diffusion.%s.%s.%%d.cprofile' % (backend, meshsize))
             self.logged_call([mpi, 'python concat.py', "'"+pattern+"'", outfile, 'mpi'])
         return time
 

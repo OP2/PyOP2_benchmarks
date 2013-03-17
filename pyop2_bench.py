@@ -12,6 +12,7 @@ import subprocess
 
 from benchrun import Benchmark
 
+
 class PyOP2Benchmark(Benchmark):
     """Abstract base class for PyOP2 benchmarks."""
 
@@ -40,7 +41,7 @@ class PyOP2Benchmark(Benchmark):
 
     def log(self, msg=''):
         with open(self._path('benchmark.log'), 'a') as f:
-            f.write(msg+'\n')
+            f.write(msg + '\n')
         logging.info(msg)
         return msg
 
@@ -50,21 +51,20 @@ class PyOP2Benchmark(Benchmark):
         return self.log(subprocess.check_output(call, stderr=subprocess.STDOUT, shell=True))
 
     def logged_call_with_time(self, call, env=None):
-        if env is None: 
-            env=os.environ
+        if env is None:
+            env = os.environ
         msg = self.logged_call(call)
         for line in msg.split('\n'):
             if line.find('/fluidity ::') != -1:
                     time = float(line.split(' ')[2])
         return time
-    
+
     def flufl_call_with_time(self, call):
         msg = self.logged_call(call)
         for line in msg.split('\n'):
             if line.find('UFL ::') != -1:
                     time = float(line.split(' ')[2])
         return time
-
 
     def dump(self):
         with open(self._path('results.pickle'), 'wb') as f:
@@ -77,12 +77,14 @@ class PyOP2Benchmark(Benchmark):
     def compute_speedup(self):
         for v in self.version:
             for this, base in zip(self.plotdata[v], self.plotdata[self.reference[1]]):
-                self.plotdata[v+'_speedup'].append(base/this)
+                self.plotdata[v + '_speedup'].append(base / this)
 
-    def _plot(self, figname, plot, col, legend_pos, ylabel, title, format='svg', write_script=True):
+    def _plot(self, figname, plot, col, legend_pos, ylabel, title,
+              format='svg', write_script=True):
         fig = pylab.figure(figname, figsize=(8, 6), dpi=300)
         for v in self.version:
-            plot(self.plotdata['elements'], self.plotdata[col(v)], self.plotstyle[v], lw=2, label=self.plotlabels[v])
+            plot(self.plotdata['elements'], self.plotdata[col(v)],
+                 self.plotstyle[v], lw=2, label=self.plotlabels[v])
         pylab.legend(loc=legend_pos)
         pylab.xlabel('Number of elements in the mesh')
         pylab.ylabel(ylabel)
@@ -92,15 +94,18 @@ class PyOP2Benchmark(Benchmark):
             pylab.show()
         else:
             for fmt in format.split(','):
-                pylab.savefig(self._path('%s.%s' % (figname,fmt)), orientation='landscape', format=fmt, transparent=True)
+                pylab.savefig(self._path('%s.%s' % (figname, fmt)),
+                              orientation='landscape', format=fmt, transparent=True)
         pylab.close(fig)
 
         if write_script:
             np.save(self._path('elements.npy'), self.plotdata['elements'])
             for v in self.version:
                 np.save(self._path(col(v) + '.npy'), self.plotdata[col(v)])
-            code = "pylab." + plot.func_name + "(np.load('elements.npy'), np.load('%s.npy'), '%s', lw=2, label='%s')"
-            plots = '\n'.join([code % (col(v), self.plotstyle[v], self.plotlabels[v]) for v in self.version])
+            code = "pylab." + plot.func_name + \
+                   "(np.load('elements.npy'), np.load('%s.npy'), '%s', lw=2, label='%s')"
+            plots = '\n'.join([code % (col(v), self.plotstyle[v],
+                               self.plotlabels[v]) for v in self.version])
             if not format:
                 savefig = "pylab.show()"
                 mplimport = ""

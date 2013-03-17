@@ -175,7 +175,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.dry_run(version, meshsize)
         self.log("Running %s with mesh size %s" % (version, meshsize))
         t = self.__getattribute__(version)(meshsize)
-        elems = meshsize
+        with open(self.mesh % meshsize + '.ele') as m:
+            elems = int(m.readline().split()[0])
         if not elems in self.plotdata['elements']:
             self.plotdata['elements'].append(elems)
         self.plotdata[version].append(t)

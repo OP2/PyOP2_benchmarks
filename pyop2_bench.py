@@ -6,6 +6,7 @@ from collections import defaultdict
 from datetime import datetime
 import matplotlib as mpl
 mpl.use("Agg")
+import numpy as np
 import pylab
 import subprocess
 
@@ -78,8 +79,8 @@ class PyOP2Benchmark(Benchmark):
             for this, base in zip(self.plotdata[v], self.plotdata[self.reference[1]]):
                 self.plotdata[v+'_speedup'].append(base/this)
 
-    def _plot(self, fig, plot, col, legend_pos, ylabel, title, format='svg'):
-        f = pylab.figure(fig, figsize=(8, 6), dpi=300)
+    def _plot(self, figname, plot, col, legend_pos, ylabel, title, format='svg', write_script=True):
+        fig = pylab.figure(figname, figsize=(8, 6), dpi=300)
         for v in self.version:
             plot(self.plotdata['elements'], self.plotdata[col(v)], self.plotstyle[v], lw=2, label=self.plotlabels[v])
         pylab.legend(loc=legend_pos)
@@ -91,5 +92,33 @@ class PyOP2Benchmark(Benchmark):
             pylab.show()
         else:
             for fmt in format.split(','):
-                pylab.savefig(self._path('%s.%s' % (fig,fmt)), orientation='landscape', format=fmt, transparent=True)
-        pylab.close(f)
+                pylab.savefig(self._path('%s.%s' % (figname,fmt)), orientation='landscape', format=fmt, transparent=True)
+        pylab.close(fig)
+
+        if write_script:
+            np.save(self._path('elements.npy'), self.plotdata['elements'])
+            for v in self.version:
+                np.save(self._path(col(v) + '.npy'), self.plotdata[col(v)])
+            code = "pylab." + plot.func_name + "(np.load('elements.npy'), np.load('%s.npy'), '%s', lw=2, label='%s')"
+            plots = '\n'.join([code % (col(v), self.plotstyle[v], self.plotlabels[v]) for v in self.version])
+            if not format:
+                savefig = "pylab.show()"
+                mplimport = ""
+            else:
+                code = "pylab.savefig('%s.%s', orientation='landscape', format='%s', transparent=True)"
+                savefig = '\n'.join([code % (figname, fmt, fmt) for fmt in format.split(',')])
+                mplimport = "import matplotlib\nmatplotlib.use('Agg')"
+            with open(self._path(figname + ".plot.py"), 'w') as f:
+                f.write("""import numpy as np
+%(mplimport)s
+import pylab
+
+fig = pylab.figure('%(figname)s', figsize=(8, 6), dpi=300)
+%(plots)s
+pylab.legend(loc='%(legend_pos)s')
+pylab.xlabel('Number of elements in the mesh')
+pylab.ylabel('%(ylabel)s')
+pylab.title('%(title)s')
+pylab.grid()
+%(savefig)s
+""" % locals())

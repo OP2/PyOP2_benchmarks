@@ -206,10 +206,9 @@ class AdvDiffBenchmark(PyOP2Benchmark):
             self._plot('speedup_'+fig, pl, lambda x: x+'_speedup', 'lower right',
                        'Relative speedup over Fluidity baseline', title, format)
 
-if __name__ == '__main__':
-
+def get_parser(desc=AdvDiffBenchmark.__doc__):
     import argparse
-    parser = argparse.ArgumentParser(description=AdvDiffBenchmark.__doc__)
+    parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-r', '--run', action='store_true', help='run benchmarks')
     parser.add_argument('-p', '--plot', action='store_true', help='plot results')
     parser.add_argument('-d', '--dump', action='store_true', help='Pickle dump')
@@ -232,8 +231,9 @@ if __name__ == '__main__':
     parser.add_argument('--fluidity-cmd', help='Fluidity binary to run')
     parser.add_argument('--python-profile', action='store_true',
             help='Create a cProfile of the Python runs')
-    args = parser.parse_args()
+    return parser
 
+def main(args):
     logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
     b = AdvDiffBenchmark(args.n, args.message, args.versions, args.reference,
             args.extrude, mpicmd=args.mpi_cmd, flcmd=args.fluidity_cmd, profile=args.python_profile)
@@ -252,3 +252,6 @@ if __name__ == '__main__':
         b.write_csv()
     if args.plot:
         b.plot_result()
+
+if __name__ == '__main__':
+    main(get_parser().parse_args())

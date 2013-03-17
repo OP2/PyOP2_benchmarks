@@ -1,7 +1,7 @@
 import logging
 import os
 import csv
-import pickle
+import cPickle
 from collections import defaultdict
 from datetime import datetime
 import matplotlib as mpl
@@ -68,11 +68,11 @@ class PyOP2Benchmark(Benchmark):
 
     def dump(self):
         with open(self._path('results.pickle'), 'wb') as f:
-            pickle.dump(self.__dict__, f)
+            cPickle.dump(self.__dict__, f, cPickle.HIGHEST_PROTOCOL)
 
     def load(self, filename):
         with open(filename, 'rb') as f:
-            self.__dict__.update(pickle.load(f))
+            self.__dict__.update(cPickle.load(f))
 
     def compute_speedup(self):
         for v in self.version:

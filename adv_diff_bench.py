@@ -7,6 +7,7 @@ from generate_mesh import generate_meshfile
 from generate_triangle import generate_trianglefile
 import parameters
 
+import numpy
 import pylab
 
 
@@ -79,7 +80,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         """PyOP2 advection-diffusion benchmark (CUDA backend)"""
         return self._pyop2_call('cuda', meshsize)
 
-    def __init__(self, np=1, message='', version=None, reference=None,
+    def __init__(self, np=1, nruns=1, mode='min', message='', version=None, reference=None,
                  extrude=False, meshsize=None, params=None, mpicmd=None,
                  flcmd=None, profile=None):
         params = params or ['version', 'meshsize']
@@ -95,6 +96,11 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.log("Reference %s: %s" % self.reference)
 
         self.np = np
+        self.nruns = nruns
+        self.mode = {'min': min,
+                     'max': max,
+                     'mean': numpy.mean,
+                     'median': numpy.median}[mode]
         self.message = message
         self.mpicmd = mpicmd or 'mpiexec' if np > 1 else ''
         self.flcmd = flcmd or '${FLUIDITY_DIR}/bin/fluidity'
@@ -178,7 +184,10 @@ class AdvDiffBenchmark(PyOP2Benchmark):
     def run(self, version, meshsize):
         self.dry_run(version, meshsize)
         self.log("Running %s with mesh size %s" % (version, meshsize))
-        t = self.__getattribute__(version)(meshsize)
+        self.log("Taking %s of %d runs" % (self.mode.__name__, self.nruns))
+        runtimes = [self.__getattribute__(version)(meshsize) for i in range(self.nruns)]
+        t = self.mode(runtimes)
+        self.log("Run times: %s, %s: %d" % (runtimes, self.mode.__name__, t))
         with open(self.mesh % meshsize + '.ele') as m:
             elems = int(m.readline().split()[0])
         if not elems in self.plotdata['elements']:
@@ -228,7 +237,11 @@ def get_parser(desc=AdvDiffBenchmark.__doc__):
                         help='Do not generate input files')
     parser.add_argument('--reorder', action='store_true', default=True,
                         help='Reorder mesh (only when called with --create-input)')
-    parser.add_argument('-n', '-np', type=int, default=1,
+    parser.add_argument('-n', '--nruns', type=int, default=1,
+                        help='Number of repetitions for each parameter combination')
+    parser.add_argument('--mode', choices=['min', 'max', 'mean', 'median'], default='min',
+                        help='How to reduce run times of multiple runs (min/max/mean/median)')
+    parser.add_argument('-np', type=int, default=1,
                         help='Number of MPI process (Fluidity, DOLFIN)')
     parser.add_argument('-m', '--message', default='',
                         help='Message, added to the log output')
@@ -241,9 +254,10 @@ def get_parser(desc=AdvDiffBenchmark.__doc__):
 
 def main(args):
     logging.getLogger().setLevel(logging.WARN if args.quiet else logging.INFO)
-    b = AdvDiffBenchmark(args.n, args.message, args.versions, args.reference,
-                         args.extrude, mpicmd=args.mpi_cmd,
-                         flcmd=args.fluidity_cmd, profile=args.python_profile)
+    b = AdvDiffBenchmark(args.np, args.nruns, args.mode, args.message,
+                         args.versions, args.reference, args.extrude,
+                         mpicmd=args.mpi_cmd, flcmd=args.fluidity_cmd,
+                         profile=args.python_profile)
     if args.load and os.path.exists(args.load):
         b.load(args.load)
     if args.create_input:

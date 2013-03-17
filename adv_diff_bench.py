@@ -146,6 +146,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                 else:
                     self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %s %s' \
                             % (self.np, mesh))
+            self.logged_call('${FENICS_DIR}/bin/dolfin-convert %s.ele %s.xml' % (mesh, os.path.join('meshes', s)))
             def write_flml(f1, f2):
                 f2.write(f1.read() % {
                     'mesh': mesh,

@@ -2,13 +2,14 @@ from glob import glob
 from math import sqrt
 import logging
 import os
-import pylab
 
 from benchrun import clock
 from pyop2_bench import PyOP2Benchmark
 from generate_mesh import generate_meshfile
 from generate_triangle import generate_trianglefile
 import parameters
+
+import pylab
 
 class AdvDiffBenchmark(PyOP2Benchmark):
     """PyOP2 vs. Fluidity vs. DOLFIN benchmark."""

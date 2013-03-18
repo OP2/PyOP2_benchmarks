@@ -114,19 +114,18 @@ class AdvDiffBenchmark(PyOP2Benchmark):
             self.mesh = os.path.join(self.meshdir, 'square.%s')
             self.generate_mesh = generate_trianglefile
 
-        self.plotstyle = dict(zip(self.version, ['k-o', 'g-s', 'r-d', 'b-^']))
-        self.plotlabels = {
-            'fluidity': 'Fluidity (cores: 1)',
-            'fluidity_mpi': 'Fluidity (cores: %d)' % self.np,
-            'fluidity_pyop2_seq': 'Fluidity-PyOP2 (backend: sequential)',
-            'fluidity_pyop2_cuda': 'Fluidity-PyOP2 (backend: cuda)',
-            'fluidity_pyop2_openmp': 'Fluidity-PyOP2 (backend: openmp)',
-            'fluidity_pyop2_mpi': 'Fluidity-PyOP2 (backend: mpi)',
-            'fluidity_pyop2_mpi_openmp': 'Fluidity-PyOP2 (backend: mpi+openmp)',
-            'pyop2_seq': 'PyOP2 (backend: sequential)',
-            'pyop2_openmp': 'PyOP2 (backend: OpenMP)',
-            'pyop2_cuda': 'PyOP2 (backend: CUDA)',
-            'dolfin': 'DOLFIN (cores: %d)' % self.np
+        self.plotmeta = {
+            'fluidity':                  ('k--o', 1, 'Fluidity (cores: 1)'),
+            'fluidity_mpi':              ('g--s', 1, 'Fluidity (cores: %d)' % self.np),
+            'fluidity_pyop2_seq':        ('r-d',  2, 'Fluidity-PyOP2 (backend: sequential)'),
+            'fluidity_pyop2_cuda':       ('b-^',  2, 'Fluidity-PyOP2 (backend: cuda)'),
+            'fluidity_pyop2_openmp':     ('c-v',  2, 'Fluidity-PyOP2 (backend: openmp)'),
+            'fluidity_pyop2_mpi':        ('m-<',  2, 'Fluidity-PyOP2 (backend: mpi)'),
+            'fluidity_pyop2_mpi_openmp': ('y->',  2, 'Fluidity-PyOP2 (backend: mpi+openmp)'),
+            'pyop2_seq':                 ('g:1',  2, 'PyOP2 (backend: sequential)'),
+            'pyop2_openmp':              ('r:2',  2, 'PyOP2 (backend: OpenMP)'),
+            'pyop2_cuda':                ('b:3',  2, 'PyOP2 (backend: CUDA)'),
+            'dolfin':                    ('c-.*', 1, 'DOLFIN (cores: %d)' % self.np)
         }
 
     def create_input(self, reorder):

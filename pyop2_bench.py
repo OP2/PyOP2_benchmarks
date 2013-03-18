@@ -83,8 +83,9 @@ class PyOP2Benchmark(Benchmark):
               format='svg', write_script=True):
         fig = pylab.figure(figname, figsize=(8, 6), dpi=300)
         for v in self.version:
+            style, lw, label = self.plotmeta[v]
             plot(self.plotdata['elements'], self.plotdata[col(v)],
-                 self.plotstyle[v], lw=2, label=self.plotlabels[v])
+                 style, lw=lw, label=label)
         pylab.legend(loc=legend_pos)
         pylab.xlabel('Number of elements in the mesh')
         pylab.ylabel(ylabel)
@@ -100,12 +101,13 @@ class PyOP2Benchmark(Benchmark):
 
         if write_script:
             np.save(self._path('elements.npy'), self.plotdata['elements'])
+            code = "pylab." + plot.func_name + \
+                   "(np.load('elements.npy'), np.load('%s.npy'), '%s', lw=%d, label='%s')\n"
+            plots = ''
             for v in self.version:
                 np.save(self._path(col(v) + '.npy'), self.plotdata[col(v)])
-            code = "pylab." + plot.func_name + \
-                   "(np.load('elements.npy'), np.load('%s.npy'), '%s', lw=2, label='%s')"
-            plots = '\n'.join([code % (col(v), self.plotstyle[v],
-                               self.plotlabels[v]) for v in self.version])
+                style, lw, label = self.plotmeta[v]
+                plots += code % (col(v), style, lw, label)
             if not format:
                 savefig = "pylab.show()"
                 mplimport = ""

@@ -115,8 +115,8 @@ class AdvDiffBenchmark(PyOP2Benchmark):
             self.generate_mesh = generate_trianglefile
 
         self.plotmeta = {
-            'fluidity':                  ('k--o', 1, 'Fluidity (cores: 1)'),
-            'fluidity_mpi':              ('g--s', 1, 'Fluidity (cores: %d)' % self.np),
+            'fluidity':                  ('k--o', 2, 'Fluidity (cores: 1)'),
+            'fluidity_mpi':              ('g--s', 2, 'Fluidity (cores: %d)' % self.np),
             'fluidity_pyop2_seq':        ('r-d',  2, 'Fluidity-PyOP2 (backend: sequential)'),
             'fluidity_pyop2_cuda':       ('b-^',  2, 'Fluidity-PyOP2 (backend: cuda)'),
             'fluidity_pyop2_openmp':     ('c-v',  2, 'Fluidity-PyOP2 (backend: openmp)'),
@@ -125,7 +125,7 @@ class AdvDiffBenchmark(PyOP2Benchmark):
             'pyop2_seq':                 ('g:1',  2, 'PyOP2 (backend: sequential)'),
             'pyop2_openmp':              ('r:2',  2, 'PyOP2 (backend: OpenMP)'),
             'pyop2_cuda':                ('b:3',  2, 'PyOP2 (backend: CUDA)'),
-            'dolfin':                    ('c-.*', 1, 'DOLFIN (cores: %d)' % self.np)
+            'dolfin':                    ('c-.*', 2, 'DOLFIN (cores: %d)' % self.np)
         }
 
     def create_input(self, reorder):

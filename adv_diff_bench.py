@@ -165,11 +165,12 @@ class AdvDiffBenchmark(PyOP2Benchmark):
                 })
             # Generate flml
             for backend in ['sequential', 'openmp', 'cuda']:
-                with open('ufl_advection_diffusion%s.flml.template' % self.profile) as f1, \
+                tpl = os.path.join('input', 'ufl_advection_diffusion%s.flml.template')
+                with open(tpl % self.profile) as f1, \
                         open(os.path.join(self.flmldir, 'ufl_advection_diffusion%s.%s.%s.flml'
                              % (self.profile, backend, s)), 'w') as f2:
                     write_flml(f1, f2)
-            with open('advection_diffusion.flml.template') as f1, \
+            with open(os.path.join('input', 'advection_diffusion.flml.template')) as f1, \
                     open(os.path.join(self.flmldir, 'advection_diffusion.%s.flml' % s), 'w') as f2:
                 write_flml(f1, f2)
 

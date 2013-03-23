@@ -28,6 +28,7 @@ def generate_trianglefile(mesh, size, capture=False, reorder=True, move=True, cw
         movedge = runcmd("mv square.1.edge %s.edge" % mesh)
         movnode = runcmd("mv square.1.node %s.node" % mesh)
         generate = '\n'.join([generate, movele, movedge, movnode])
+    runcmd("rm -f square.1.*")
     if capture:
         return generate
 

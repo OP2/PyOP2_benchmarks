@@ -105,8 +105,9 @@ class AdvDiffBenchmark(PyOP2Benchmark):
         self.mpicmd = mpicmd or 'mpiexec' if np > 1 else ''
         self.flcmd = flcmd or '${FLUIDITY_DIR}/bin/fluidity'
         self.profile = '.profile' if profile else ''
-        self.meshdir = os.path.join('meshes', str(self.np)) if self.np > 1 else 'meshes'
-        self.flmldir = os.path.join('flmls', str(self.np)) if self.np > 1 else 'flmls'
+        abspath = os.path.abspath(os.path.dirname(__file__))
+        self.meshdir = os.path.join(abspath, 'meshes', str(self.np)) if self.np > 1 else 'meshes'
+        self.flmldir = os.path.join(abspath, 'flmls', str(self.np)) if self.np > 1 else 'flmls'
         if extrude:
             self.mesh = os.path.join(self.meshdir, 'mesh.%s')
             self.generate_mesh = generate_meshfile
@@ -137,20 +138,21 @@ class AdvDiffBenchmark(PyOP2Benchmark):
             mesh = self.mesh % s
             # Generate mesh
             self.log("Generating mesh %s" % mesh)
-            self.log(self.generate_mesh(mesh, s, capture=True, reorder=reorder, move=self.np == 1))
+            self.log(self.generate_mesh(mesh, s, capture=True, reorder=reorder,
+                     move=self.np == 1, cwd='input'))
             # Decompose the mesh if running in parallel
             if self.np > 1:
                 if reorder:
                     cmd = '${HILBERT_DIR}/bin/flredecomp -i 1 -o %d reorder_mesh_0_checkpoint decomp'
-                    self.logged_call([self.mpicmd, cmd % self.np])
+                    self.logged_call([self.mpicmd, cmd % self.np], cwd='input')
                     for m in glob('decomp_CoordinateMesh_*'):
-                        self.logged_call('mv %s %s%s' % (m, mesh, m[21:]))
-                    self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.ele %s.ele" % mesh)
-                    self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.edge %s.edge" % mesh)
-                    self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.node %s.node" % mesh)
+                        self.logged_call('mv %s %s%s' % (m, mesh, m[21:]), cwd='input')
+                    self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.ele %s.ele" % mesh, cwd='input')
+                    self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.edge %s.edge" % mesh, cwd='input')
+                    self.logged_call("mv reorder_mesh_CoordinateMesh_0_checkpoint.node %s.node" % mesh, cwd='input')
                 else:
                     self.logged_call('${FLUIDITY_DIR}/bin/fldecomp -m triangle -n %s %s'
-                                     % (self.np, mesh))
+                                     % (self.np, mesh), cwd='input')
             self.logged_call('${FENICS_DIR}/bin/dolfin-convert %s.ele %s.xml'
                              % (mesh, os.path.join('meshes', s)))
 

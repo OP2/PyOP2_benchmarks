@@ -45,10 +45,10 @@ class PyOP2Benchmark(Benchmark):
         logging.info(msg)
         return msg
 
-    def logged_call(self, call):
+    def logged_call(self, call, cwd=None):
         if not isinstance(call, str):
             call = ' '.join(call)
-        return self.log(subprocess.check_output(call, stderr=subprocess.STDOUT, shell=True))
+        return self.log(subprocess.check_output(call, stderr=subprocess.STDOUT, shell=True, cwd=cwd))
 
     def logged_call_with_time(self, call, env=None):
         if env is None:

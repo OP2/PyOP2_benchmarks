@@ -14,7 +14,7 @@
       <from_file file_name="square.1">
         <format name="triangle"/>
         <stat>
-          <include_in_stat/>
+          <exclude_from_stat/>
         </stat>
       </from_file>
     </mesh>
@@ -33,6 +33,8 @@
         <real_value rank="0">1</real_value>
       </constant>
     </dump_period>
+    <disable_dump_at_start/>
+    <disable_dump_at_end/>
     <output_mesh name="CoordinateMesh"/>
     <checkpointing>
       <checkpoint_period_in_dumps>
@@ -106,19 +108,13 @@
         </initial_condition>
         <output/>
         <stat>
-          <include_in_stat/>
-          <previous_time_step>
-            <exclude_from_stat/>
-          </previous_time_step>
-          <nonlinear_field>
-            <exclude_from_stat/>
-          </nonlinear_field>
+          <exclude_from_stat/>
         </stat>
         <convergence>
-          <include_in_convergence/>
+          <exclude_from_convergence/>
         </convergence>
         <detectors>
-          <include_in_detectors/>
+          <exclude_from_detectors/>
         </detectors>
         <steady_state>
           <include_in_steady_state/>

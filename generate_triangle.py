@@ -7,28 +7,26 @@ import os
 import sys
 import subprocess
 
-cwd = os.path.dirname(__file__)
-input = lambda f: os.path.join(cwd, 'input', f)
 
-def runcmd(cmd, capture):
+def generate_trianglefile(mesh, size, capture=False, reorder=True, move=True, cwd=None):
     if capture:
-        return subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-    return subprocess.call(cmd, shell=True)
+        runcmd = lambda cmd: subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True, cwd=cwd)
+    else:
+        runcmd = lambda cmd: subprocess.call(cmd, shell=True, cwd=cwd)
+    generate = runcmd("triangle -e -a%s %s" % (size, 'square.poly'))
 
-def generate_trianglefile(mesh, size, capture=False, reorder=True, move=True):
-    generate = runcmd("triangle -e -a%s %s" % (size, input('square.poly')), capture)
     if reorder:
-        fluidity = runcmd("${HILBERT_DIR}/bin/fluidity " + input('reorder_mesh.flml'), capture)
+        fluidity = runcmd("${HILBERT_DIR}/bin/fluidity " + 'reorder_mesh.flml')
         generate = '\n'.join([generate, fluidity])
         if move:
-            movele = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.ele %s.ele" % mesh, capture)
-            movedge = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.edge %s.edge" % mesh, capture)
-            movnode = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.node %s.node" % mesh, capture)
+            movele = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.ele %s.ele" % mesh)
+            movedge = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.edge %s.edge" % mesh)
+            movnode = runcmd("mv reorder_mesh_CoordinateMesh_0_checkpoint.node %s.node" % mesh)
             generate = '\n'.join([generate, movele, movedge, movnode])
     elif move:
-        movele = runcmd("mv square.1.ele %s.ele" % mesh, capture)
-        movedge = runcmd("mv square.1.edge %s.edge" % mesh, capture)
-        movnode = runcmd("mv square.1.node %s.node" % mesh, capture)
+        movele = runcmd("mv square.1.ele %s.ele" % mesh)
+        movedge = runcmd("mv square.1.edge %s.edge" % mesh)
+        movnode = runcmd("mv square.1.node %s.node" % mesh)
         generate = '\n'.join([generate, movele, movedge, movnode])
     if capture:
         return generate

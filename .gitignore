@@ -1,3 +1,4 @@
-*.pyc
+*.py[cdo]
+*~
 flmls
 meshes
